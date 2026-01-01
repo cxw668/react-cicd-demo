@@ -3,13 +3,14 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]  # 当 main 分支有 push 时触发
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 允许 Action 向仓库写入内容（用于推送 gh-pages）
+      contents: write
 
     steps:
       - name: Checkout code
@@ -31,9 +32,9 @@ jobs:
 
       - name: Debug: List dist contents
         run: |
-          echo "🔍 Checking dist directory..."
+          echo "Checking dist directory..."
           ls -la ./dist
-          echo "📄 Content of index.html:"
+          echo "Content of index.html:"
           cat ./dist/index.html
 
       - name: Deploy to GitHub Pages
