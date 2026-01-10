@@ -1,8 +1,12 @@
+import { DashBoard } from "./components/DashBoard"
+
 function App() {
 
   return (
     <>
-      <div style={{ margin: '100px auto' }}>这是我的第一个react cicd 项目</div>
+      <div className="flex flex-col items-center h-screen">
+        <DashBoard/>
+      </div>
     </>
   )
 }
