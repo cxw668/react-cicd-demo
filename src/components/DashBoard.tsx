@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, createContext, useCallback, useContext, useMemo } from "react";
 
 // 1. useState
 function Counter() {
@@ -14,7 +14,7 @@ function Counter() {
   }
   return (
     <div className="text-blue-500">
-      <h2 className="text-lg text-gray-900 mb-6 text-center">1. Counter</h2>
+      <h2 className="text-lg text-gray-400 mb-6 text-center">1. Counter</h2>
       <div className="text-center mb-8">
         <div className="inline-block px-8 py-4 bg-gray-50 rounded-2xl border-2 border-gray-200">
           <span className="text-6xl font-bold text-gray-800">{count}</span>
@@ -60,7 +60,7 @@ function Clock() {
   }, [])
   return (
     <div className="w-full">
-      <h2 className="text-lg text-gray-900 my-6 text-center">2. Clock</h2>
+      <h2 className="text-lg text-gray-400 my-6 text-center">2. Clock</h2>
 
       <div className="flex items-center justify-center gap-4 mb-4">
         {/* 小时 */}
@@ -137,7 +137,7 @@ function Button({ variant = 'primary', children, onClick, disabled = false, type
 function ButtonShowcase() {
   return (
     <div className="w-full max-w-sm mx-auto">
-      <h2 className="text-lg text-gray-900 my-6 text-center">3. ButtonShowcase</h2>
+      <h2 className="text-lg text-gray-400 my-6 text-center">3. ButtonShowcase</h2>
       {/* variant */}
       <h3 className="text-xl font-semibold text-blue-500 my-4">Button Variants</h3>
       <div className="grid grid-cols-4">
@@ -690,21 +690,69 @@ function ContactForm() {
     </div>
   );
 }
+interface ThemeContextType {
+  theme: string;
+  toggleTheme: () => void;
+}
 
-export function DashBoard() {
+const ThemeContext = createContext<ThemeContextType | null>(null)
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+  }, [])
+
+  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme])
+
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  )
+}
+
+function ThemeToggle() {
+  const context = useContext(ThemeContext)
+  if (!context) return null
+  
+  const { theme, toggleTheme } = context
+
   return (
     <div className="w-full">
-      <Counter />
-
-      <Clock />
-
-      <ButtonShowcase />
-
-      <UserProfile />
-
-      <TodoList />
-
-      <ContactForm />
+      <h2 className="text-lg text-emerald-500 font-bold my-6">7. Theme Toggle</h2>
+      <div className="flex flex-col items-center gap-4">
+        <p className="text-sm text-gray-500">
+          Current Theme: <span className="font-bold uppercase text-emerald-600">{theme}</span>
+        </p>
+        <Button 
+          onClick={toggleTheme} 
+          variant={theme === 'light' ? 'primary' : 'Sean'}
+        >
+          {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+        </Button>
+      </div>
     </div>
+  )
+}
+export function DashBoard() {
+  return (
+    <ThemeProvider>
+      <div className="w-full max-w-md mx-auto p-6 space-y-12">
+        <Counter />
+        <Clock />
+        <ButtonShowcase />
+        <UserProfile />
+        <TodoList />
+        <ContactForm />
+        <ThemeToggle />
+      </div>
+    </ThemeProvider>
   )
 }
