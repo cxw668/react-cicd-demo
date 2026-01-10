@@ -157,17 +157,146 @@ function ButtonShowcase() {
     </div>
   )
 }
-export function DashBoard() {
+
+interface User {
+  name: string
+  email: string
+}
+
+function UserProfile() {
+  const [user, setUser] = useState<User | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [randomNumber, setRandomNumber] = useState<number | null>(null)
+
+  const fetchUser = () => {
+    setLoading(true)
+    setError(null)
+    setUser(null)
+    setRandomNumber(null)
+
+    setTimeout(() => {
+      const random = Math.random()
+      setRandomNumber(random)
+      console.log('random number:', random)
+
+      random < 0.3 ? setError('failed to load user data') : setUser({ name: 'Jack', email: '123@qq.com' })
+      setLoading(false)
+    }, 300)
+  }
+
+  useEffect(() => {
+    fetchUser()
+  }, [])
 
   return (
+    <div className="w-full max-h-svh">
+      <h2 className="text-lg text-center text-gray-400 font-bold my-6">4. User Profile</h2>
+      <span>Conditional rander</span>
+
+      {loading && (
+        <div className="text-center p-8">
+          <div className="">Loading user data</div>
+        </div>
+      )}
+
+      {error && (
+        <div className="error">
+          <div className="text-red-500">{error}</div>
+          {randomNumber && (
+            <div className="text-sm text-pink-500">
+              Random Number: <strong>{randomNumber.toFixed(3)}</strong>
+            </div>
+          )}
+          <Button onClick={fetchUser} variant="primary">Reset User</Button>
+        </div>
+      )}
+
+      {user && (
+        <div className="user">
+          <h3 className="text-lg font-bold">User Profile</h3>
+          <div className="text-2xl text-orange-400">name: {user.name}</div>
+          <div className="text-2xl text-orange-400">email: {user.email}</div>
+
+          <div className="random">
+            {randomNumber && (
+              <div className="text-center text-2xl">
+                Random Number: <strong>{randomNumber.toFixed(3)}</strong>
+                <div className="text-green-500"> (≥ 0.3 = Success)</div>
+              </div>
+            )}
+          </div>
+
+          <Button onClick={fetchUser} variant="secondary">Reset User</Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface Todo {
+  text: string
+  completed: boolean
+  id: number
+}
+function TodoList() {
+
+  const [todos, setTodos] = useState<Todo[] | null>([
+    { id: 1, text: 'Learn React useState', completed: true },
+    { id: 2, text: 'Master useEffect', completed: true },
+    { id: 3, text: 'Understand props', completed: false },
+    { id: 4, text: 'Practice conditional rendering', completed: false },
+    { id: 5, text: 'Build awesome apps', completed: false },
+  ])
+  const toggle = (id: number) => {
+    setTodos(prev => prev ? prev.map(todo => 
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ) : null)
+  }
+  return (
+    <div className="w-full">
+      <h2 className="text-lg text-center font-bold text-amber-500 my-6 border-b pb-2">5. TodoList</h2>
+      {todos && (
+        <ul>
+          {todos.map(todo => (
+            <div 
+              key={todo.id}
+              className={`flex items-center justify-between p-3 rounded-xl border ${
+                todo.completed 
+                  ? 'bg-green-50 border-green-200 opacity-75' 
+                  : 'bg-white border-gray-200 shadow-sm'
+              }`}
+            >
+              <li className={`flex-1 text-gray-700 ${todo.completed ? 'line-through text-gray-400' : 'font-medium'}`}>
+                <span className="mr-2 text-gray-300 font-bold">{todo.id}.</span>
+                {todo.text}
+              </li>
+              <Button 
+                onClick={() => toggle(todo.id)} 
+                variant={todo.completed ? 'secondary' : 'primary'}
+                className="text-xs py-1 px-3"
+              >
+                {todo.completed ? 'Undo' : 'Done'}
+              </Button>
+            </div>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+export function DashBoard() {
+  return (
     <div className="w-full max-w-sm">
-      {/* 1.Counter */}
       <Counter />
 
-      {/* 2.Clock*/}
       <Clock />
 
       <ButtonShowcase />
+
+      <UserProfile />
+
+      <TodoList />
     </div>
   )
 }
