@@ -174,14 +174,11 @@ function UserProfile() {
     setUser(null)
     setRandomNumber(null)
 
-    setTimeout(() => {
-      const random = Math.random()
-      setRandomNumber(random)
-      console.log('random number:', random)
+    const random = Math.random()
+    setRandomNumber(random)
 
-      random < 0.3 ? setError('failed to load user data') : setUser({ name: 'Jack', email: '123@qq.com' })
-      setLoading(false)
-    }, 300)
+    random < 0.3 ? setError('failed to load user data') : setUser({ name: 'Jack', email: '123@qq.com' })
+    setLoading(false)
   }
 
   useEffect(() => {
