@@ -1,5 +1,4 @@
 import { useEffect, useState, createContext, useCallback, useContext, useMemo } from "react";
-
 // 1. useState
 function Counter() {
   const [count, setCount] = useState(0)
@@ -741,6 +740,99 @@ function ThemeToggle() {
     </div>
   )
 }
+
+function NotesWidget() {
+  const [notes, setNotes] = useState(()=>localStorage.getItem('tutorial-notes')?.split(',') || [])
+  const [newNote, setNewNote] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('tutorial-notes', notes.join(','))
+  }, [notes])
+  const noteStats = useMemo(() => {
+    console.log('📊 Calculating note statistics...'); // You'll only see this when notes change
+    return {
+      total: notes.length,
+      long: notes.filter(note => note.length > 10).length,
+      avgLength: notes.length > 0 ? Math.round(notes.reduce((sum, note) => sum + note.length, 0) / notes.length) : 0
+    };
+  }, [notes]);
+
+  const addNote = useCallback(() => {
+    if (newNote.trim()) {
+      setNotes([...notes, newNote.trim()]);
+      setNewNote('');
+    }
+  }, [notes, newNote, setNotes]);
+
+  const clearNotes = useCallback(() => {
+    setNotes([]);
+  }, [setNotes]);
+
+  return (
+    <div className="w-full">
+      <h3>
+        <span className="widget-icon">📚</span>
+        Smart Notes
+        <span className="pattern-badge">Custom Hooks</span>
+      </h3>
+      
+      <div className="grid grid-cols-3 gap-2 text-center p-3 rounded mb-4" style={{ 
+        background: 'var(--muted)'
+      }}>
+        <div>
+          <div className="font-bold">{noteStats.total}</div>
+          <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Notes</div>
+        </div>
+        <div>
+          <div className="font-bold">{noteStats.long}</div>
+          <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Long</div>
+        </div>
+        <div>
+          <div className="font-bold">{noteStats.avgLength}</div>
+          <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Avg chars</div>
+        </div>
+      </div>
+      
+      <div className="mb-4">
+        <div className="flex gap-2">
+          <input
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            placeholder="Add a note..."
+            className="input flex-1"
+            onKeyUp={(e) => e.key === 'Enter' && addNote()}
+          />
+          <Button onClick={addNote}>Add</Button>
+        </div>
+      </div>
+      
+      <div className="max-h-48 overflow-y-auto">
+        {notes.length === 0 ? (
+          <p className="text-sm text-center p-4" style={{ 
+            color: 'var(--muted-foreground)'
+          }}>
+            No notes yet. Add one above!
+          </p>
+        ) : (
+          notes.map((note, index) => (
+            <div key={index} className="note-item">
+              {note}
+            </div>
+          ))
+        )}
+      </div>
+      
+      {notes.length > 0 && (
+        <div className="mt-4 text-center">
+          <Button variant="destructive" onClick={clearNotes}>
+            Clear All Notes
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function DashBoard() {
   return (
     <ThemeProvider>
@@ -752,6 +844,7 @@ export function DashBoard() {
         <TodoList />
         <ContactForm />
         <ThemeToggle />
+        <NotesWidget />
       </div>
     </ThemeProvider>
   )
