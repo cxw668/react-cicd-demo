@@ -1,5 +1,5 @@
-import { ChristmasTemplate } from "./components/ChristmasTemplate"
-import { DashBoard } from "./components/DashBoard"
+
+import { ThankGiving } from "./components/ThanksGiving"
 
 function App() {
 
@@ -7,7 +7,8 @@ function App() {
     <>
       <div className="flex flex-col w-full">
         {/* <DashBoard/> */}
-        <ChristmasTemplate />
+        {/* <ChristmasTemplate /> */}
+        <ThankGiving />
       </div>
     </>
   )
