@@ -1,16 +1,13 @@
 import { useEffect, useState, createContext, useCallback, useContext, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { decrement, increment, reset } from "../features/counter/counterSlice";
 // 1. useState
 function Counter() {
-  const [count, setCount] = useState(0)
-  const handleCountAdd = () => {
-    setCount(prev => prev + 1)
-  }
-  const handleCountSubstract = () => {
-    setCount(prev => prev > 0 ? prev - 1 : prev = 0)
-  }
-  const handleCountReset = () => {
-    setCount(0)
-  }
+  const count = useSelector((state: { counter: { value: number } }) => state.counter.value)
+  const dispatch = useDispatch()
+  const handleCountAdd = () => dispatch(increment())
+  const handleCountSubstract = () => dispatch(decrement())
+  const handleCountReset = () => dispatch(reset())
   return (
     <div className="text-blue-500">
       <h2 className="text-lg text-gray-400 mb-6 text-center">1. Counter</h2>
@@ -47,6 +44,7 @@ function Counter() {
 
 // 2. useEffect
 function Clock() {
+  const count = useSelector((state: {counter: {value: number}}) => state.counter.value)
   const [time, setTime] = useState<Date | null>(null)
   useEffect(() => {
     setTime(new Date())
@@ -60,7 +58,7 @@ function Clock() {
   return (
     <div className="w-full">
       <h2 className="text-lg text-gray-400 my-6 text-center">2. Clock</h2>
-
+      <h2 className="text-lg text-green-600 font-bold">Counter: {count}</h2>
       <div className="flex items-center justify-center gap-4 mb-4">
         {/* 小时 */}
         <div className="relative">
