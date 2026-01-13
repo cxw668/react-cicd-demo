@@ -1,5 +1,5 @@
-import headerImage from '../../public/image-assets/PM-Holiday-Image1.jpg'
-export function ChristmasTemplate() {
+import headerImage from '@/assets/image-assets/PM-Holiday-Image1.jpg'
+export default function ChristmasTemplate() {
 
   return (
     <div className="w-full max-w-200 mx-auto">
@@ -15,7 +15,7 @@ export function ChristmasTemplate() {
 
       <div className="grid grid-cols-2 gap-5">
         <div className="flex flex-col items-center justify-end">
-          <img src="image-assets/PM-Holiday-Image2.jpg" alt="" />
+          <img src="src/assets/image-assets/PM-Holiday-Image2.jpg" alt="" />
           <div className='bg-[#BF0F35] p-5'>
             <h3 className="text-center font-bold text-lg text-white">sweet berry pie</h3>
             <p className="text-center text-white">the sweetest and easiest berry pie perfect for the Holidays!</p>
@@ -23,7 +23,7 @@ export function ChristmasTemplate() {
            <button className="border-4 rounded-xl border-red-700 px-1 py-3 my-3">Read More</button>
         </div>
         <div className="flex flex-col items-center justify-end">
-          <img src="image-assets/PM-Holiday-Image3.jpg" alt="" />
+          <img src="src/assets/image-assets/PM-Holiday-Image3.jpg" alt="" />
           <div className='bg-[#BF0F35] p-5'>
             <h3 className="text-center text-lg text-white font-bold">10 meaningful gifts</h3>
             <p className="text-center text-white">worry no more with these gifts that your family will love!</p>
@@ -35,10 +35,10 @@ export function ChristmasTemplate() {
       <div className="bg-[#BF0F35] p-5">
         <h3 className="text-center text-lg font-bold text-white">Follow us social media</h3>
         <div className='flex justify-center items-center gap-5 p-2'>
-          <img className='w-[35px]' src="image-assets/facebook.png" alt="" />
-          <img className='w-[35px]' src="image-assets/ig.png" alt="" />
-          <img className='w-[35px]' src="image-assets/pinterest.png" alt="" />
-          <img className='w-[35px]' src="image-assets/twitter.png" alt="" />
+          <img className='w-[35px]' src="src/assets/image-assets/facebook.png" alt="" />
+          <img className='w-[35px]' src="src/assets/image-assets/ig.png" alt="" />
+          <img className='w-[35px]' src="src/assets/image-assets/pinterest.png" alt="" />
+          <img className='w-[35px]' src="src/assets/image-assets/twitter.png" alt="" />
         </div>
       </div>
 

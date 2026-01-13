@@ -1,13 +1,36 @@
 import { useEffect, useState, createContext, useCallback, useContext, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { decrement, increment, reset } from "../features/counter/counterSlice";
+import { useCounterStore, useUserStore } from "../store";
+import { useShallow } from "zustand/react/shallow";
+/**
+ * @title React base 
+ * @description A dashboard component that showcases the use of useState, useEffect, useMemo, useCallback, useContext
+ * zustand - useShallow
+ * @returns Dashboard component
+ */
 // 1. useState
+/**
+ * @title Counter
+ * @description A counter component that showcases the use of useState, useEffect, useMemo, useCallback, useContext
+ * @returns Counter component
+ */
 function Counter() {
-  const count = useSelector((state: { counter: { value: number } }) => state.counter.value)
-  const dispatch = useDispatch()
-  const handleCountAdd = () => dispatch(increment())
-  const handleCountSubstract = () => dispatch(decrement())
-  const handleCountReset = () => dispatch(reset())
+  /**
+   * @title useShallow
+   * @description 使用 useShallow 的原因：默认情况下，Zustand 使用严格引用相等（===）来判断状态是否变化。
+   * 当我们返回一个“新对象”时，即使内部字段没变，每次都会触发组件重渲染。
+   * useShallow 会对返回的对象做浅比较（shallow equal），只有真正变化的字段才会让组件重新渲染，
+   * 从而避免不必要的重渲染，提升性能。
+   * @param state - Zustand store 的完整状态
+   * @returns 组件真正关心的那部分状态（浅比较后）
+   */
+  const { count, increment, decrement, reset } = useCounterStore(
+    useShallow((state) => ({
+      count: state.count,
+      increment: state.increment,
+      decrement: state.decrement,
+      reset: state.reset,
+    }))
+  )
   return (
     <div className="text-blue-500">
       <h2 className="text-lg text-gray-400 mb-6 text-center">1. Counter</h2>
@@ -18,21 +41,21 @@ function Counter() {
       </div>
       <div className="grid grid-cols-3 gap-3">
         <button
-          onClick={handleCountSubstract}
+          onClick={decrement}
           className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium"
         >
           −
         </button>
 
         <button
-          onClick={handleCountReset}
+          onClick={reset}
           className="px-4 py-3 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium"
         >
           Reset
         </button>
 
         <button
-          onClick={handleCountAdd}
+          onClick={increment}
           className="px-4 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg font-medium"
         >
           +
@@ -42,9 +65,14 @@ function Counter() {
   )
 }
 
+/**
+ * @title Clock
+ * @description A clock component that showcases the use of useState, useEffect, useMemo, useCallback, useContext
+ * @returns Clock component
+ */
 // 2. useEffect
 function Clock() {
-  const count = useSelector((state: {counter: {value: number}}) => state.counter.value)
+  const count = useCounterStore((state)=>state.count)
   const [time, setTime] = useState<Date | null>(null)
   useEffect(() => {
     setTime(new Date())
@@ -154,33 +182,31 @@ function ButtonShowcase() {
     </div>
   )
 }
-
-interface User {
-  name: string
-  email: string
-}
+/**
+ * @title UserProfile
+ * @description A component that displays user profile information.
+ * @returns UserProfile component
+ */
 
 function UserProfile() {
-  const [user, setUser] = useState<User | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading, error, fetchUser } = useUserStore(
+    useShallow((state) => ({
+      user: state.user,
+      loading: state.loading,
+      error: state.error,
+      fetchUser: state.fetchUser,
+    }))
+  )
   const [randomNumber, setRandomNumber] = useState<number | null>(null)
 
-  const fetchUser = () => {
-    setLoading(true)
-    setError(null)
-    setUser(null)
-    setRandomNumber(null)
-
+  const handleFetchUser = async () => {
     const random = Math.random()
     setRandomNumber(random)
-
-    random < 0.3 ? setError('failed to load user data') : setUser({ name: 'Jack', email: '123@qq.com' })
-    setLoading(false)
+    await fetchUser()
   }
 
   useEffect(() => {
-    fetchUser()
+    handleFetchUser()
   }, [])
 
   return (
@@ -203,7 +229,7 @@ function UserProfile() {
                 Random Number: <strong>{randomNumber.toFixed(3)}</strong>
               </div>
             )}
-            <Button onClick={fetchUser} variant="primary">Reset User</Button>
+            <Button onClick={handleFetchUser} variant="primary">Reset User</Button>
           </div>
         )}
 
@@ -221,7 +247,7 @@ function UserProfile() {
               )}
             </div>
 
-            <Button onClick={fetchUser} variant="secondary">Reset User</Button>
+            <Button onClick={handleFetchUser} variant="secondary">Reset User</Button>
           </div>
         )}
       </div>
@@ -234,6 +260,11 @@ interface Todo {
   completed: boolean
   id: number
 }
+/**
+ * @title TodoList
+ * @description A component that allows users to add, view, and manage a list of todos.
+ * @returns TodoList component
+ */
 function TodoList() {
 
   const [todos, setTodos] = useState<Todo[] | null>([
@@ -736,6 +767,11 @@ function ThemeToggle() {
   )
 }
 
+/**
+ * @title NotesWidget
+ * @description A widget that allows users to add, view, and manage notes.
+ * @returns NotesWidget component
+ */
 function NotesWidget() {
   const [notes, setNotes] = useState(()=>localStorage.getItem('tutorial-notes')?.split(',') || [])
   const [newNote, setNewNote] = useState('');
@@ -828,7 +864,12 @@ function NotesWidget() {
   );
 }
 
-export function DashBoard() {
+/**
+ * @title Dashboard
+ * @description A dashboard component that showcases the use of useState, useEffect, useMemo, useCallback, useContext
+ * @returns Dashboard component
+ */
+function DashBoard() {
   return (
     <ThemeProvider>
       <div className="w-full max-w-md mx-auto p-6 space-y-12">
@@ -844,3 +885,4 @@ export function DashBoard() {
     </ThemeProvider>
   )
 }
+export default DashBoard
