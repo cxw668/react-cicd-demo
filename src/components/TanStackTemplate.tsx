@@ -29,15 +29,18 @@ const queryClient = new QueryClient({
  * 3. 缓存粒度：invalidateQueries 会触发数据全量重取，对于高频细微修改（如勾选完成）性能开销较高。
  */
 export default function TanStackTemplate() {
-  
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen grid grid-cols-2 gap-20 bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto space-y-8">
-          <Example />
-          <hr className="border-gray-200" />
-          <NewestTodoCard />
-          <TodoList />
+          <div className='github-info'>
+            <Example />
+          </div>
+          <div className="todos-list">
+            <NewestTodoCard />
+            <TodoList />
+          </div>
         </div>
       </div>
     </QueryClientProvider>
@@ -62,8 +65,8 @@ function NewestTodoCard() {
   )
 
   // Sort by createdAt to find the truly newest one
-  const newestTodo = Array.isArray(todos) && todos.length > 0 
-    ? [...todos].sort((a, b) => b.createdAt - a.createdAt)[0] 
+  const newestTodo = Array.isArray(todos) && todos.length > 0
+    ? [...todos].sort((a, b) => b.createdAt - a.createdAt)[0]
     : null
 
   return (
@@ -84,14 +87,13 @@ function NewestTodoCard() {
           Latest Task
         </h3>
         {newestTodo && (
-          <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md backdrop-blur-md ${
-            newestTodo.completed ? 'bg-green-400/30 text-green-100' : 'bg-yellow-400/30 text-yellow-100'
-          }`}>
+          <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md backdrop-blur-md ${newestTodo.completed ? 'bg-green-400/30 text-green-100' : 'bg-yellow-400/30 text-yellow-100'
+            }`}>
             {newestTodo.completed ? 'Done' : 'In Progress'}
           </span>
         )}
       </div>
-      
+
       {newestTodo ? (
         <div className="space-y-3">
           <p className="text-2xl font-semibold leading-tight drop-shadow-sm">
@@ -227,7 +229,7 @@ function TodoList() {
         Error loading todos
       </h3>
       <p className="text-sm">{(error as Error).message}</p>
-      <button 
+      <button
         onClick={() => queryClient.invalidateQueries({ queryKey: ['todos'] })}
         className="mt-4 text-sm font-semibold underline hover:text-red-800"
       >
@@ -257,9 +259,9 @@ function TodoList() {
           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           disabled={addMutation.isPending}
         />
-        <Button 
+        <Button
           variant="Sean"
-          type="submit" 
+          type="submit"
           loading={addMutation.isPending}
           disabled={!newTodoText.trim()}
         >
@@ -280,20 +282,18 @@ function TodoList() {
             {Array.isArray(todos) && todos.map(todo => (
               <li
                 key={todo.id}
-                className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
-                  todo.completed 
-                    ? 'bg-gray-50 border-gray-100 opacity-60' 
-                    : 'bg-white border-gray-200 shadow-sm hover:border-blue-200'
-                }`}
+                className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${todo.completed
+                  ? 'bg-gray-50 border-gray-100 opacity-60'
+                  : 'bg-white border-gray-200 shadow-sm hover:border-blue-200'
+                  }`}
               >
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => toggleMutation.mutate(todo.id)}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      todo.completed 
-                        ? 'bg-green-500 border-green-500 text-white' 
-                        : 'border-gray-300 hover:border-blue-500'
-                    }`}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${todo.completed
+                      ? 'bg-green-500 border-green-500 text-white'
+                      : 'border-gray-300 hover:border-blue-500'
+                      }`}
                   >
                     {todo.completed && (
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

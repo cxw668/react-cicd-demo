@@ -1,6 +1,7 @@
 import { useEffect, useState, createContext, useCallback, useContext, useMemo } from "react";
 import { useCounterStore, useUserStore } from "../store";
 import { useShallow } from "zustand/react/shallow";
+import { useNavigate } from "react-router-dom";
 /**
  * @title React base 
  * @description A dashboard component that showcases the use of useState, useEffect, useMemo, useCallback, useContext
@@ -72,7 +73,7 @@ function Counter() {
  */
 // 2. useEffect
 function Clock() {
-  const count = useCounterStore((state)=>state.count)
+  const count = useCounterStore((state) => state.count)
   const [time, setTime] = useState<Date | null>(null)
   useEffect(() => {
     setTime(new Date())
@@ -212,7 +213,7 @@ function UserProfile() {
   return (
     <div className="w-full max-h-svh">
       <h2 className="text-lg text-center text-gray-400 font-bold my-6">4. User Profile</h2>
-     
+
 
       <div className="flex justify-center items-center">
         {loading && (
@@ -288,8 +289,8 @@ function TodoList() {
             <div
               key={todo.id}
               className={`flex items-center justify-between p-3 rounded-xl border ${todo.completed
-                  ? 'bg-green-50 border-green-200 opacity-75'
-                  : 'bg-white border-gray-200 shadow-sm'
+                ? 'bg-green-50 border-green-200 opacity-75'
+                : 'bg-white border-gray-200 shadow-sm'
                 }`}
             >
               <li className={`flex-1 text-gray-700 ${todo.completed ? 'line-through text-gray-400' : 'font-medium'}`}>
@@ -467,7 +468,7 @@ function ContactForm() {
               {errors.message && <div className="error">{errors.message}</div>}
             </div>
 
-            <Button variant="Sean" type="submit" disabled={isSubmitting} onClick={()=>{}}>
+            <Button variant="Sean" type="submit" disabled={isSubmitting} onClick={() => { }}>
               {isSubmitting ? 'Sending...' : 'Send Message'}
             </Button>
           </form>
@@ -746,7 +747,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 function ThemeToggle() {
   const context = useContext(ThemeContext)
   if (!context) return null
-  
+
   const { theme, toggleTheme } = context
 
   return (
@@ -756,8 +757,8 @@ function ThemeToggle() {
         <p className="text-sm text-gray-500">
           Current Theme: <span className="font-bold uppercase text-emerald-600">{theme}</span>
         </p>
-        <Button 
-          onClick={toggleTheme} 
+        <Button
+          onClick={toggleTheme}
           variant={theme === 'light' ? 'primary' : 'Sean'}
         >
           {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
@@ -773,7 +774,7 @@ function ThemeToggle() {
  * @returns NotesWidget component
  */
 function NotesWidget() {
-  const [notes, setNotes] = useState(()=>localStorage.getItem('tutorial-notes')?.split(',') || [])
+  const [notes, setNotes] = useState(() => localStorage.getItem('tutorial-notes')?.split(',') || [])
   const [newNote, setNewNote] = useState('');
 
   useEffect(() => {
@@ -806,8 +807,8 @@ function NotesWidget() {
         Smart Notes
         <span className="pattern-badge">Custom Hooks</span>
       </h3>
-      
-      <div className="grid grid-cols-3 gap-2 text-center p-3 rounded mb-4" style={{ 
+
+      <div className="grid grid-cols-3 gap-2 text-center p-3 rounded mb-4" style={{
         background: 'var(--muted)'
       }}>
         <div>
@@ -823,7 +824,7 @@ function NotesWidget() {
           <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Avg chars</div>
         </div>
       </div>
-      
+
       <div className="mb-4">
         <div className="flex gap-2">
           <input
@@ -836,10 +837,10 @@ function NotesWidget() {
           <Button onClick={addNote}>Add</Button>
         </div>
       </div>
-      
+
       <div className="max-h-48 overflow-y-auto">
         {notes.length === 0 ? (
-          <p className="text-sm text-center p-4" style={{ 
+          <p className="text-sm text-center p-4" style={{
             color: 'var(--muted-foreground)'
           }}>
             No notes yet. Add one above!
@@ -852,7 +853,7 @@ function NotesWidget() {
           ))
         )}
       </div>
-      
+
       {notes.length > 0 && (
         <div className="mt-4 text-center">
           <Button variant="destructive" onClick={clearNotes}>
@@ -864,6 +865,35 @@ function NotesWidget() {
   );
 }
 
+function TanstackDiv() {
+  const navigate = useNavigate()
+  return (
+    <div className="flex flex-col gap-4 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 shadow-sm mb-8">
+      <div className="flex items-center justify-between">
+        <h3 className="text-indigo-900 font-bold flex items-center">
+          <span className="mr-2 text-xl">🚀</span>
+          TanStack Query Comparison
+        </h3>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => navigate('/tanstack')}
+          className="flex flex-col items-center p-3 bg-white hover:bg-red-50 border border-red-100 rounded-xl transition-all group"
+        >
+          <span className="text-xs font-bold text-red-400 mb-1 group-hover:scale-110 transition-transform">Standard</span>
+          <span className="text-[10px] text-gray-500">Normal Sync</span>
+        </button>
+        <button
+          onClick={() => navigate('/tanstack-optimized')}
+          className="flex flex-col items-center p-3 bg-white hover:bg-green-50 border border-green-100 rounded-xl transition-all group shadow-sm hover:shadow-md"
+        >
+          <span className="text-xs font-bold text-green-500 mb-1 group-hover:scale-110 transition-transform">Optimized</span>
+          <span className="text-[10px] text-gray-500">Zero Latency</span>
+        </button>
+      </div>
+    </div>
+  )
+}
 /**
  * @title Dashboard
  * @description A dashboard component that showcases the use of useState, useEffect, useMemo, useCallback, useContext
@@ -873,6 +903,7 @@ function DashBoard() {
   return (
     <ThemeProvider>
       <div className="w-full max-w-md mx-auto p-6 space-y-12">
+        <TanstackDiv />
         <Counter />
         <Clock />
         <ButtonShowcase />

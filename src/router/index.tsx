@@ -4,6 +4,7 @@ import DashBoard from '../components/DashBoard'
 import ChristmasTemplate from '../components/ChristmasTemplate'
 import ThanksGiving from '../components/ThanksGiving'
 import TanStackTemplate from '../components/TanStackTemplate'
+import OptimizedTanStack from '../components/OptimizedTanStack'
 const router = createBrowserRouter([
   {
     path: '/',
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
       {
         path: 'tanstack',
         element: <TanStackTemplate />,
+      },
+      {
+        path: 'tanstack-optimized',
+        element: <OptimizedTanStack />,
       }
     ]
   },
