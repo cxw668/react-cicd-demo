@@ -3,14 +3,14 @@ export default function ThankGiving() {
   const { t, i18n } = useTranslation()
   return (
     <div className="bg-[#F8F9FA] rounded-xl w-150 mx-auto">
-      <div className='flex justify-end p-5'>
-        <button className='bg-[#FF700C] text-white px-2 py-1 font-bold text-[16px]' onClick={() => i18n.changeLanguage('en')} title={t('translate_to_en')}>English</button>
-        <button className='bg-[#FF9D57] text-white px-2 py-1 font-bold text-[16px]' onClick={() => i18n.changeLanguage('zh')} title={t('translate_to_zh')}>中 文</button>
-      </div>
-
-      <div className="header p-5">
+      <div className='flex justify-between items-center'>
         <img src="src/assets/image-giving/food-logo.jpg" alt="" />
+        <div className='p-5'>
+          <button className='bg-[#FF700C] hover:bg-[#FF9D57] hover:text-[#4a4a4a] text-white w-20 px-2 py-1 font-bold text-[16px]' onClick={() => i18n.changeLanguage('en')} title={t('translate_to_en')}>English</button>
+          <button className='bg-[#FF9D57] hover:bg-[#FF700C] hover:text-[#4a4a4a] text-white w-20 px-2 py-1 font-bold text-[16px]' onClick={() => i18n.changeLanguage('zh')} title={t('translate_to_zh')}>中 文</button>
+        </div>
       </div>
+      <h1 className='text-center font-bold text-[48px] text-amber-500'>{t('Thanks Giving')}</h1>
       <img src="src/assets/image-giving/img-10.jpg" alt="" />
       <h1 className="text-[36px] text-[#4A4A4A] text-center font-bold p-5">{t('Garlic Herb Roast Turkey')}</h1>
       <p className="text-center text-[#4A4A4A]">{t('turkey_description')}</p>
