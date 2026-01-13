@@ -897,6 +897,18 @@ function TanstackDiv() {
     </div>
   )
 }
+
+function I18nDiv() {
+  const navigate = useNavigate()
+  return (
+    <div className="w-full max-w-md mx-auto p-2 hover:cursor-pointer hover:bg-indigo-50"  onClick={() => navigate('/thanksgiving')} title="I18n - Thanksgiving">
+      <h3 className="text-indigo-900 font-bold flex items-center">
+        <span className="mr-2 text-xl">🌍</span>
+        点击进入i18n - thanksgiving 页面
+      </h3>
+    </div>
+  )
+}
 /**
  * @title Dashboard
  * @description A dashboard component that showcases the use of useState, useEffect, useMemo, useCallback, useContext
@@ -906,6 +918,7 @@ function DashBoard() {
   return (
     <ThemeProvider>
       <div className="w-full max-w-md mx-auto p-6 space-y-12">
+        <I18nDiv />
         <TanstackDiv />
         <Counter />
         <Clock />
