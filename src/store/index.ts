@@ -47,9 +47,10 @@ export const useUserStore = create<UserStore>((set) => ({
    * 异步获取用户信息，内部自动处理 loading 与错误状态
    */
   fetchUser: async () => {
-    set({ loading: true, error: null })
+    // 开始获取时，清空之前的状态，防止 UI 重叠
+    set({ loading: true, error: null, user: null })
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 500))
       const random = Math.random()
       if (random < 0.3) {
         throw new Error('failed to load user data')

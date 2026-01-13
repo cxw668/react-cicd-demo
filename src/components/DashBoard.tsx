@@ -197,23 +197,22 @@ function UserProfile() {
       error: state.error,
       fetchUser: state.fetchUser,
     }))
-  )
-  const [randomNumber, setRandomNumber] = useState<number | null>(null)
+  );
+  const [randomNumber, setRandomNumber] = useState<number | null>(0);
 
   const handleFetchUser = async () => {
-    const random = Math.random()
-    setRandomNumber(random)
-    await fetchUser()
-  }
+    const random = Math.random();
+    setRandomNumber(random);
+    await fetchUser();
+  };
 
   useEffect(() => {
-    handleFetchUser()
-  }, [])
+    handleFetchUser();
+  }, []);
 
   return (
     <div className="w-full max-h-svh">
       <h2 className="text-lg text-center text-gray-400 font-bold my-6">4. User Profile</h2>
-
 
       <div className="flex justify-center items-center">
         {loading && (
@@ -222,7 +221,7 @@ function UserProfile() {
           </div>
         )}
 
-        {error && (
+        {!loading && error && (
           <div className="error">
             <div className="text-red-500">{error}</div>
             {randomNumber && (
@@ -230,11 +229,13 @@ function UserProfile() {
                 Random Number: <strong>{randomNumber.toFixed(3)}</strong>
               </div>
             )}
-            <Button onClick={handleFetchUser} variant="primary">Reset User</Button>
+            <Button onClick={handleFetchUser} variant="primary">
+              Reset User
+            </Button>
           </div>
         )}
 
-        {user && (
+        {!loading && user && (
           <div className="user">
             <div className="text-2xl text-orange-400">name: {user.name}</div>
             <div className="text-2xl text-orange-400">email: {user.email}</div>
@@ -248,12 +249,14 @@ function UserProfile() {
               )}
             </div>
 
-            <Button onClick={handleFetchUser} variant="secondary">Reset User</Button>
+            <Button onClick={handleFetchUser} variant="secondary">
+              Reset User
+            </Button>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 interface Todo {
