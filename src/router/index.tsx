@@ -5,6 +5,7 @@ import ChristmasTemplate from '../components/ChristmasTemplate'
 import ThanksGiving from '../components/ThanksGiving'
 import TanStackTemplate from '../components/TanStackTemplate'
 import OptimizedTanStack from '../components/OptimizedTanStack'
+import UserForm from '../components/UserForm'
 const router = createBrowserRouter([
   {
     path: '/',
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: 'tanstack-optimized',
         element: <OptimizedTanStack />,
+      },
+      {
+        path: 'user-form',
+        element: <UserForm />,
       }
     ]
   },

@@ -221,7 +221,7 @@ function UserProfile() {
           </div>
         )}
 
-        {!loading && error && (
+        {!loading && !user && error && (
           <div className="error">
             <div className="text-red-500">{error}</div>
             {randomNumber && (

@@ -32,7 +32,7 @@ export default function TanStackTemplate() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen grid grid-cols-2 gap-20 bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto space-y-8">
           <div className='github-info'>
             <Example />
