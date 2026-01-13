@@ -202,7 +202,7 @@ function TodoList() {
       // 返回上下文对象以供回滚
       return { previousTodos }
     },
-    onError: (err, newTodo, context) => {
+    onError: (_err, _newTodo, context) => {
       // 发生错误时回滚
       if (context?.previousTodos) {
         queryClient.setQueryData(['todos'], context.previousTodos)
@@ -232,7 +232,7 @@ function TodoList() {
       
       return { previousTodos }
     },
-    onError: (err, id, context) => {
+    onError: (_err, _id, context) => {
       if (context?.previousTodos) {
         queryClient.setQueryData(['todos'], context.previousTodos)
       }
@@ -255,7 +255,7 @@ function TodoList() {
       
       return { previousTodos }
     },
-    onError: (err, id, context) => {
+    onError: (_err, _id, context) => {
       if (context?.previousTodos) {
         queryClient.setQueryData(['todos'], context.previousTodos)
       }
