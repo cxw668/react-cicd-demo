@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, TextField, Button, Typography, Paper, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { signToken } from "../utils/auth";
 import { useUserStore } from "../store";
+import { ConnectToBase } from "@/utils/database";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -11,6 +12,9 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
 
+  useEffect(()=>{
+    ConnectToBase()
+  })
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");

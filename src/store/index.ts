@@ -1,5 +1,7 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
+import consola from 'consola'
 
 /**
  * 计数器 store
@@ -13,7 +15,7 @@ type CounterStore = {
   incrementByAmount: (amount: number) => void
 }
 
-export const useCounterStore = create<CounterStore>((set)=>({
+export const useCounterStore = create<CounterStore>((set) => ({
   count: 1,
   increment: () => set((state) => ({ count: state.count + 1 })),
   decrement: () => set((state) => ({ count: state.count - 1 })),
@@ -73,16 +75,16 @@ export interface Todo {
 }
 
 let mockTodos: Todo[] = [
-  { id: '1', text: 'Learn React Query Basics', completed: true, createdAt: Date.now()},
-  { id: '2', text: 'Master useQuery', completed: true, createdAt: Date.now()},
-  { id: '3', text: 'Understand useMutation', completed: false, createdAt: Date.now()},
+  { id: '1', text: 'Learn React Query Basics', completed: true, createdAt: Date.now() },
+  { id: '2', text: 'Master useQuery', completed: true, createdAt: Date.now() },
+  { id: '3', text: 'Understand useMutation', completed: false, createdAt: Date.now() },
 ]
 
 export const Todo_api = {
   fetchTodos: async (): Promise<Todo[]> => {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500))
-    if(!localStorage.getItem('todos')) {
+    if (!localStorage.getItem('todos')) {
       localStorage.setItem('todos', JSON.stringify([...mockTodos]))
     }
     return JSON.parse(localStorage.getItem('todos') || '[]') as Todo[]
@@ -176,13 +178,13 @@ export const useTodoStore = create<TodoStore>((set) => ({
 /**
  * 用户表单状态管理 - Hooks Form
  */
-export const mockCountriesOptions = 
-  ['USA' , 'Canada' , 'UK' , 'Australia' , 'Germany' , 'France' , 'Japan' , 'China' , 'Brazil' , 'India']
-export const mockNationsOptions = 
-  ['American' , 'Canadian' , 'British' , 'Australian' , 'German' , 'French' , 'Japanese' , 'Chinese' , 'Brazilian' , 'Indian']
+export const mockCountriesOptions =
+  ['USA', 'Canada', 'UK', 'Australia', 'Germany', 'France', 'Japan', 'China', 'Brazil', 'India']
+export const mockNationsOptions =
+  ['American', 'Canadian', 'British', 'Australian', 'German', 'French', 'Japanese', 'Chinese', 'Brazilian', 'Indian']
 export type UserForm = {
   id: string
-  name:string
+  name: string
   email: string
   age: number
   birthdate?: string
@@ -208,7 +210,7 @@ let mockUserData: UserForm[] = [
 export const api_UserForm = {
   getUser: async (): Promise<UserForm[]> => {
     await new Promise(resolve => setTimeout(resolve, 500))
-    if(!localStorage.getItem('users')){
+    if (!localStorage.getItem('users')) {
       localStorage.setItem('users', JSON.stringify(mockUserData))
     }
     mockUserData = JSON.parse(localStorage.getItem('users') || '[]') as UserForm[]
@@ -291,3 +293,113 @@ export const useUserFormStore = create<UserFormStore>((set) => ({
     }
   },
 }))
+
+export interface DailyTask {
+  id: string;
+  title: string;
+  description: string;
+  note: string;
+}
+
+export const tasksData: DailyTask[] = [
+  {
+    id: '1',
+    title: 'Day 1 —— 核心架构与异步状态',
+    description: 'Zustand, TanStack Query, i18n 基础',
+    note: `### 1. Zustand 状态管理
+- **核心概念**：使用 \`create\` 函数定义原子化 Store，解耦逻辑与视图。
+- **性能优化**：引入 \`useShallow\` 进行浅比较，确保只有关心的状态变化时才触发组件重绘。
+- **状态更新**：掌握 \`set\` 函数的函数式更新（基于 prev state）与直接合并模式。
+
+### 2. TanStack Query (React Query)
+- **数据获取**：使用 \`useQuery\` 封装 API 请求，自动处理 \`isLoading\`、\`error\` 及数据缓存。
+- **数据同步**：通过 \`queryClient.invalidateQueries\` 实现数据操作后的自动静默刷新。
+
+### 3. i18n 国际化方案
+- **技术栈**：\`react-i18next\` + \`i18next-http-backend\` (动态加载) + \`i18next-browser-languagedetector\` (自动检测)。
+- **配置要点**：
+  - \`backend.loadPath\`：定义多语言 JSON 文件的动态加载路径。
+  - \`fallbackLng\`：配置回退语言，提升系统鲁棒性。
+  - \`detection\`：设置语言检测优先级（如 LocalStorage > Navigator）。
+
+### 4. 仪表盘基础 (Dashboard)
+- 实现了基础的 \`UserProfile\` 组件，包含加载骨架屏逻辑与异步数据获取演示。`
+  },
+  {
+    id: '2',
+    title: 'Day 2 —— 认证授权与交互增强',
+    description: 'JWT Auth, Hook Form, 乐观更新',
+    note: `### 1. JWT 认证安全 (Auth)
+- **技术选型**：使用轻量级 \`jose\` 库处理客户端加密。
+- **流程实现**：
+  - **登录逻辑**：校验凭据后生成 JWT 令牌并存入 \`localStorage\`。
+  - **路由保护**：在 \`App.tsx\` 顶层进行令牌校验，未授权请求自动重定向至 \`LoginPage\`。
+  - **工具类封装**：封装 \`verifyToken\` 函数，确保每个受保护路由的安全性。
+
+### 2. React Hook Form 进阶
+- **表单控制**：使用 \`useForm\` 替代受控组件，大幅减少渲染次数。
+- **MUI 集成**：通过 \`Controller\` 组件完美适配 MUI 的 \`TextField\`、\`Select\` 等受控 UI 组件。
+
+### 3. TanStack Query 乐观更新 (Optimistic Updates)
+- **交互升级**：在 \`OptimizedTanStack.tsx\` 中实现“先更新 UI，后同步后端”。
+- **错误处理**：通过 \`onMutate\` 保存快照，在 \`onError\` 中实现 UI 状态自动回滚，确保数据最终一致性。
+
+### 4. UI/UX 增强
+- **MUI 深度集成**：引入 \`Drawer\` (抽屉导航)、\`Dialog\` (弹窗详情) 和 \`Menu\` (快速任务切换)。
+- **Markdown 支持**：集成 \`react-markdown\`，支持任务笔记的富文本展示。`
+  },
+]
+
+type TasksDataStore = {
+  tasks: DailyTask[],
+  loading: boolean,
+  error: string | null,
+  fetchTasks: () => Promise<void>,
+  addTask: (task: Omit<DailyTask, 'id'>) => Promise<void>,
+  deleteTask: (id: string) => Promise<void>,
+  updateTask: (task: DailyTask) => Promise<void>
+}
+export const useTasksDataStore = create<TasksDataStore>()(
+  persist(
+    (set) => ({
+      tasks: tasksData, // 初始使用硬编码数据
+      loading: false,
+      error: null,
+      fetchTasks: async () => {
+        // 由于使用了 persist，数据会自动从 localStorage 加载
+        // 这里可以作为手动刷新的逻辑，或者保持为空
+        set({ loading: true });
+        await new Promise(resolve => setTimeout(resolve, 300));
+        set({ loading: false });
+      },
+      addTask: async (task: Omit<DailyTask, 'id'>) => {
+        set({ loading: true });
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const newTask = { ...task, id: nanoid() };
+        set((state) => ({
+          tasks: [...state.tasks, newTask],
+          loading: false
+        }));
+      },
+      deleteTask: async (id: string) => {
+        set({ loading: true });
+        await new Promise(resolve => setTimeout(resolve, 300));
+        set((state) => ({
+          tasks: state.tasks.filter(t => t.id !== id),
+          loading: false
+        }));
+      },
+      updateTask: async (task: DailyTask) => {
+        set({ loading: true });
+        await new Promise(resolve => setTimeout(resolve, 300));
+        set((state) => ({
+          tasks: state.tasks.map(t => t.id === task.id ? task : t),
+          loading: false
+        }));
+      }
+    }),
+    {
+      name: 'daily-tasks-storage', // localStorage 中的 key
+    }
+  )
+)
