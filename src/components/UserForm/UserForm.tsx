@@ -1,6 +1,9 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { useForm, type UseFormRegister, type SubmitHandler } from "react-hook-form"
-
+import { UserForm1 } from "./UserForm1"
+import { UserForm4 } from "./UserForm4"
+import { Box } from "@mui/material"
+import dayjs from 'dayjs'
 interface IFormInput {
   firstName: string,
   lastName: string,
@@ -56,10 +59,16 @@ const GenderSelect = React.forwardRef<
  * 5. AgeSelect 与 GenderSelect 使用 forwardRef 透传 ref，保证 react-hook-form 能正确绑定 select 的值。
  * 6. 最终渲染一个带边框的表单，包含姓名、年龄、性别字段及提交按钮。
  */
-function UserForm1() {
+function UserForm() {
   const { register, handleSubmit } = useForm<IFormInput>()
   const onSubmit: SubmitHandler<IFormInput> = (data) => console.log(data)
-
+  const [time, setTime] = useState(dayjs())
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(dayjs())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-4 border border-gray-300 rounded-md">
       <Input label="First Name" register={register} required={true} />
@@ -67,23 +76,26 @@ function UserForm1() {
       <AgeSelect {...register("age")} />
       <GenderSelect {...register("gender")} />
       <button className="font-bold border p-2 m-2 btn-primary" type="submit">Submit</button>
+      <span className='p-4'>current time: {time.format('YYYY-MM-DD HH:mm:ss')}</span>
     </form>
   )
 }
-
-function UserForm2() {
-  return (
-    <form action="">
-
-    </form>
-  )
-}
-export default function UserForm() {
+export default function UserFormAll() {
 
   return (
     <div className="w-full">
-      <UserForm1 />
-      <UserForm2 />
+      {/* 1. 基础的表单 */}
+      <UserForm />
+      <Box className="flex item-center gap-10">
+        {/* 2. react-hook-form管理表单 */}
+        <div className="max-w-sm">
+          <UserForm1 />
+        </div>
+        {/* 3. 结合state管理表单 */}
+        <div className="max-w-sm">
+          <UserForm4 />
+        </div>
+      </Box>
     </div>
   )
 }

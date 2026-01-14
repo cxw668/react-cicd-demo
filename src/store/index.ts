@@ -34,6 +34,9 @@ type UserStore = {
   setUser: (user: User | null) => void
 }
 
+/**
+ * Dashboard 用户状态管理 - 条件渲染部分
+ */
 export const useUserStore = create<UserStore>((set) => ({
   user: null,
   loading: false,
@@ -167,4 +170,124 @@ export const useTodoStore = create<TodoStore>((set) => ({
       throw err
     }
   }
+}))
+
+
+/**
+ * 用户表单状态管理 - Hooks Form
+ */
+export const mockCountriesOptions = 
+  ['USA' , 'Canada' , 'UK' , 'Australia' , 'Germany' , 'France' , 'Japan' , 'China' , 'Brazil' , 'India']
+export const mockNationsOptions = 
+  ['American' , 'Canadian' , 'British' , 'Australian' , 'German' , 'French' , 'Japanese' , 'Chinese' , 'Brazilian' , 'Indian']
+export type UserForm = {
+  id: string
+  name:string
+  email: string
+  age: number
+  birthdate?: string
+  avatar?: string
+  gender: 'male' | 'female' | 'other'
+  countries: 'USA' | 'Canada' | 'UK' | 'Australia' | 'Germany' | 'France' | 'Japan' | 'China' | 'Brazil' | 'India'
+  nations: 'American' | 'Canadian' | 'British' | 'Australian' | 'German' | 'French' | 'Japanese' | 'Chinese' | 'Brazilian' | 'Indian'
+}
+// 创建 10 条模拟用户数据
+let mockUserData: UserForm[] = [
+  { id: '1', name: 'Alice', email: 'alice@example.com', age: 28, gender: 'female', countries: 'USA', nations: 'American' },
+  { id: '2', name: 'Bob', email: 'bob@example.com', age: 34, gender: 'male', countries: 'Canada', nations: 'Canadian' },
+  { id: '3', name: 'Charlie', email: 'charlie@example.com', age: 22, gender: 'male', countries: 'UK', nations: 'British' },
+  { id: '4', name: 'Diana', email: 'diana@example.com', age: 30, gender: 'female', countries: 'Australia', nations: 'Australian' },
+  { id: '5', name: 'Ethan', email: 'ethan@example.com', age: 26, gender: 'male', countries: 'Germany', nations: 'German' },
+  { id: '6', name: 'Fiona', email: 'fiona@example.com', age: 29, gender: 'female', countries: 'France', nations: 'French' },
+  { id: '7', name: 'George', email: 'george@example.com', age: 31, gender: 'male', countries: 'Japan', nations: 'Japanese' },
+  { id: '8', name: 'Hannah', email: 'hannah@example.com', age: 25, gender: 'female', countries: 'China', nations: 'Chinese' },
+  { id: '9', name: 'Ian', email: 'ian@example.com', age: 27, gender: 'male', countries: 'Brazil', nations: 'Brazilian' },
+  { id: '10', name: 'Julia', email: 'julia@example.com', age: 33, gender: 'female', countries: 'India', nations: 'Indian' },
+]
+
+export const api_UserForm = {
+  getUser: async (): Promise<UserForm[]> => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    if(!localStorage.getItem('users')){
+      localStorage.setItem('users', JSON.stringify(mockUserData))
+    }
+    mockUserData = JSON.parse(localStorage.getItem('users') || '[]') as UserForm[]
+    return [...mockUserData]
+  },
+  addUser: async (user: Omit<UserForm, 'id'>): Promise<UserForm> => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    const newUser = { ...user, id: nanoid() }
+    mockUserData = [...mockUserData, newUser]
+    localStorage.setItem('users', JSON.stringify(mockUserData))
+    return newUser
+  },
+  deleteUser: async (id: string): Promise<void> => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    mockUserData = mockUserData.filter(u => u.id !== id)
+    localStorage.setItem('users', JSON.stringify(mockUserData))
+  },
+  updateUser: async (user: UserForm): Promise<UserForm> => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    mockUserData = mockUserData.map(u => u.id === user.id ? user : u)
+    localStorage.setItem('users', JSON.stringify(mockUserData))
+    return user
+  }
+}
+
+type UserFormStore = {
+  users: UserForm[]
+  loading: boolean
+  error: string | null
+  fetchUsers: () => Promise<void>
+  addUser: (user: Omit<UserForm, 'id'>) => Promise<void> //0mit 省略 id 字段
+  updateUser: (user: UserForm) => Promise<void>
+  deleteUser: (id: string) => Promise<void>
+}
+
+export const useUserFormStore = create<UserFormStore>((set) => ({
+  users: [],
+  loading: false,
+  error: null,
+  fetchUsers: async () => {
+    set({ loading: true, error: null })
+    try {
+      const users = await api_UserForm.getUser()
+      set({ users, loading: false })
+    } catch (err) {
+      set({ error: (err as Error).message, loading: false })
+    }
+  },
+  addUser: async (user) => {
+    set({ loading: true, error: null })
+    try {
+      const newUser = await api_UserForm.addUser(user)
+      set((state) => ({ users: [...state.users, newUser], loading: false }))
+    } catch (err) {
+      set({ error: (err as Error).message, loading: false })
+    }
+  },
+  updateUser: async (user) => {
+    set({ loading: true, error: null })
+    try {
+      const updatedUser = await api_UserForm.updateUser(user)
+      set((state) => ({
+        users: state.users.map((u) => (u.id === updatedUser.id ? updatedUser : u)),
+        loading: false,
+      }))
+    } catch (err) {
+      set({ error: (err as Error).message, loading: false })
+    }
+  },
+  deleteUser: async (id) => {
+    set({ loading: true, error: null })
+    try {
+      await api_UserForm.deleteUser(id)
+      set((state) => ({
+        users: state.users.filter((u) => u.id !== id),
+        loading: false,
+      }))
+    } catch (err) {
+      set({ error: (err as Error).message, loading: false })
+    }
+  },
 }))

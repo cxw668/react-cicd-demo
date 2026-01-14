@@ -5,8 +5,15 @@ import ChristmasTemplate from '../components/ChristmasTemplate'
 import ThanksGiving from '../components/ThanksGiving'
 import TanStackTemplate from '../components/TanStackTemplate'
 import OptimizedTanStack from '../components/OptimizedTanStack'
-import UserForm from '../components/UserForm'
+import UserForm from '../components/UserForm/UserForm'
+import TreeView from '@/components/TreeView'
+import LoginPage from '../components/LoginPage'
+
 const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
   {
     path: '/',
     element: <App />,
@@ -34,6 +41,10 @@ const router = createBrowserRouter([
       {
         path: 'user-form',
         element: <UserForm />,
+      },
+      {
+        path: 'treeView',
+        element: <TreeView />
       }
     ]
   },
