@@ -2,6 +2,7 @@ import React from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import App from '../App'
 import LoginPage from '../components/LoginPage'
+import OauthCallback from '@/components/OAuthCallback'
 
 // 懒加载组件
 const DashBoard = React.lazy(() => import('../components/DashBoard'))
@@ -17,6 +18,14 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/oauth/callback',
+    element: (
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <OauthCallback/>
+      </React.Suspense>
+    )
   },
   {
     path: '/',

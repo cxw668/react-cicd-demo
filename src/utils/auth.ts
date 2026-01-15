@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 
 const SECRET = new TextEncoder().encode(
-  'your-256-bit-secret-key-at-least-32-chars-long'
+  'your-secret-key-at-least-32-characters'
 );
 
 export async function signToken(payload: any) {

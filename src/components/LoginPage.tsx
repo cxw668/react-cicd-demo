@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Box, TextField, Button, Typography, Paper, Container } from "@mui/material";
+import { Box, TextField, Button, Typography, Paper, Container, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { signToken } from "../utils/auth";
 import { useUserStore } from "../store";
+import { cookieStore } from "../utils/cookie";
+import { getOAuthRedirectUrl } from "../utils/oauth";
+import axios from "axios";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,24 +17,38 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    // Mock login logic
-    if (email === "admin@123.com" && password === "123456") {
-      const user = { name: "Admin User", email, role: "admin" };
-      const token = await signToken(user);
-      
-      // Store token in localStorage
-      localStorage.setItem("auth_token", token);
+    try {
+      const response = await axios.post("http://localhost:3001/api/login", {
+        email,
+        password,
+      });
+
+      const { token, user } = response.data;
+
+      // 使用统一的 cookieStore 管理 token
+      cookieStore.set("auth_token", token, 7);
       setUser(user);
-      
       navigate("/");
-    } else {
-      setError("Invalid email or password. Hint: admin@example.com / password123");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Invalid email or password.");
     }
   };
+  /**
+   * GITHUB login verify
+   */
+  const handleGithubLogin = () => { 
+    window.location.href = getOAuthRedirectUrl('github');
+  }
 
+  /**
+   * GITLAB login verify
+   */
+  const handleGitlabLogin = () => { 
+    window.location.href = getOAuthRedirectUrl('gitlab');
+  }
   return (
-    <Container maxWidth="xs">
-      <Box sx={{ mt: 8, display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <Container maxWidth="xs" sx={{ height: '100vh', display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", width: '100%' }}>
         <Paper elevation={3} sx={{ p: 4, width: "100%" }}>
           <Typography component="h1" variant="h5" align="center" gutterBottom>
             Login
@@ -67,6 +83,25 @@ export default function LoginPage() {
                 {error}
               </Typography>
             )}
+            <Typography variant="body2">You don't want to Register? Prepare Login in Github or GitLab!</Typography>
+            <Stack direction='row' gap={1}>
+              <Button
+                onClick={handleGithubLogin}
+                fullWidth
+                variant="contained"
+                sx={{ fontWeight: 'bold', mt: 3, mb: 2, color: '#4a4a4a', bgcolor: '#eff1f3', '&:hover': { color: '#eff1f3', bgcolor: '#4a4a4a' } }}
+              >
+                Gihub
+              </Button>
+              <Button
+                onClick={handleGitlabLogin}
+                fullWidth
+                variant="contained"
+                sx={{ fontWeight: 'bold', mt: 3, mb: 2, color: '#4a4a4a', bgcolor: '#fca326', '&:hover': { color: '#fff', bgcolor: '#e24329' } }}
+              >
+                Gitlab
+              </Button>
+            </Stack>
             <Button
               type="submit"
               fullWidth

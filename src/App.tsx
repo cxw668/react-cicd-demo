@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useUserStore, useTasksDataStore, type DailyTask } from "./store";
 import { verifyToken } from "./utils/auth";
 import { consola } from "consola";
+import { cookieStore } from "./utils/cookie";
 import {
   Box,
   Card,
@@ -255,7 +256,8 @@ function App() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem("auth_token");
+      const token = cookieStore.get("auth_token") || localStorage.getItem('auth_token');
+      
       if (!token) {
         consola.info("No token found, redirecting to login");
         navigate("/login");
@@ -264,12 +266,18 @@ function App() {
 
       const payload = await verifyToken(token);
       if (!payload) {
-        consola.error("Invalid token, redirecting to login");
+        consola.error("Invalid token, cleaning up and redirecting to login");
+        cookieStore.remove("auth_token");
         localStorage.removeItem("auth_token");
         navigate("/login");
       } else {
         consola.success("User verified via jose");
         setUser(payload as any);
+        
+        // 如果是从 localStorage 恢复的且 cookie 没有，同步回 cookie 保持一致
+        if (!cookieStore.get("auth_token")) {
+          cookieStore.set("auth_token", token, 7);
+        }
       }
     };
 

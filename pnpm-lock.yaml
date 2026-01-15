@@ -92,6 +92,9 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.7)(react@19.2.3)
+      react-oauth2-hook:
+        specifier: ^1.0.12
+        version: 1.0.12(immutable@4.3.7)(prop-types@15.8.1)(react-dom@19.2.3(react@19.2.3))(react-storage-hook@1.0.5(immutable@4.3.7)(prop-types@15.8.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       react-router:
         specifier: ^7.12.0
         version: 7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -1935,6 +1938,9 @@ packages:
   immer@11.1.3:
     resolution: {integrity: sha512-6jQTc5z0KJFtr1UgFpIL3N9XSC3saRaI9PwWtzM2pSqkNGtiNkYY2OSwkOGDK2XcTRcLb1pi/aNkKZz0nxVH4Q==}
 
+  immutable@4.3.7:
+    resolution: {integrity: sha512-1hqclzwYwjRDFLjcFxOM5AYkkG0rpFPpr1RLPMEuGczoS7YA8gLhy8SWXYRAA/XwfEHpfo3cw5JGioS32fnMRw==}
+
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
     engines: {node: '>=6'}
@@ -2556,6 +2562,16 @@ packages:
       '@types/react': '>=18'
       react: '>=18'
 
+  react-oauth2-hook@1.0.12:
+    resolution: {integrity: sha512-5jsq8+apLFKmtoDi5Eq9WmqflS7l2qATxGPXgPkhMqWLsaVcZ3swPXeKOXadYovblx/gYyNvhs01Aft2IhW3TA==}
+    engines: {node: '>=8', npm: '>=5'}
+    peerDependencies:
+      immutable: ^4.0.0-rc.12
+      prop-types: ^15.5.4
+      react: ^15.0.0 || ^16.0.0
+      react-dom: ^15.0.0 || ^16.0.0
+      react-storage-hook: ^1.0.2
+
   react-refresh@0.14.2:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
     engines: {node: '>=0.10.0'}
@@ -2586,6 +2602,15 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  react-storage-hook@1.0.5:
+    resolution: {integrity: sha512-YDGNlg3ghbMAXg2rXjANQdqGD95buT6k+/MhGly2/G9z2KhhQLErQUooi7piuKVK0ut4N+WLTs00MzmGfKQ45g==}
+    engines: {node: '>=8', npm: '>=5'}
+    peerDependencies:
+      immutable: ^4.0.0-rc.12
+      prop-types: ^15.5.4
+      react: ^15.0.0 || ^16.0.0
+      react-dom: ^15.0.0 || ^16.0.0
 
   react-transition-group@4.4.5:
     resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
@@ -4959,6 +4984,8 @@ snapshots:
   immer@11.1.3:
     optional: true
 
+  immutable@4.3.7: {}
+
   import-fresh@3.3.1:
     dependencies:
       parent-module: 1.0.1
@@ -5636,6 +5663,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  react-oauth2-hook@1.0.12(immutable@4.3.7)(prop-types@15.8.1)(react-dom@19.2.3(react@19.2.3))(react-storage-hook@1.0.5(immutable@4.3.7)(prop-types@15.8.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3):
+    dependencies:
+      immutable: 4.3.7
+      prop-types: 15.8.1
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+      react-storage-hook: 1.0.5(immutable@4.3.7)(prop-types@15.8.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+
   react-refresh@0.14.2: {}
 
   react-refresh@0.18.0: {}
@@ -5670,6 +5705,13 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
       - supports-color
+
+  react-storage-hook@1.0.5(immutable@4.3.7)(prop-types@15.8.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+    dependencies:
+      immutable: 4.3.7
+      prop-types: 15.8.1
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
   react-transition-group@4.4.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
