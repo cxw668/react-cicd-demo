@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
-import consola from 'consola'
+
+import { withBase } from '@/utils/path'
 
 /**
  * 计数器 store
@@ -55,12 +56,10 @@ export const useUserStore = create<UserStore>((set) => ({
     // 开始获取时，清空之前的状态，防止 UI 重叠
     set({ loading: true, error: null, user: null })
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      const random = Math.random()
-      if (random < 0.3) {
-        throw new Error('failed to load user data')
-      }
-      set({ user: { name: 'Jack', email: '123@qq.com' }, loading: false })
+      const response = await fetch(withBase('/api/user'))
+      if (!response.ok) throw new Error('Failed to fetch user')
+      const user = await response.json()
+      set({ user, loading: false })
     } catch (err) {
       set({ error: (err as Error).message, loading: false })
     }
@@ -80,7 +79,13 @@ let mockTodos: Todo[] = [
   { id: '3', text: 'Understand useMutation', completed: false, createdAt: Date.now() },
 ]
 
+/**
+ * Todo 业务接口封装
+ */
 export const Todo_api = {
+  /**
+   * 获取待办事项列表
+   */
   fetchTodos: async (): Promise<Todo[]> => {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500))
@@ -89,6 +94,9 @@ export const Todo_api = {
     }
     return JSON.parse(localStorage.getItem('todos') || '[]') as Todo[]
   },
+  /**
+   * 添加新待办事项
+   */
   addTodo: async (text: string): Promise<Todo> => {
     await new Promise(resolve => setTimeout(resolve, 500))
     const currentTodos = JSON.parse(localStorage.getItem('todos') || '[]') as Todo[]
@@ -97,6 +105,9 @@ export const Todo_api = {
     localStorage.setItem('todos', JSON.stringify(updatedTodos))
     return newTodo
   },
+  /**
+   * 切换待办事项完成状态
+   */
   toggleTodo: async (id: string): Promise<Todo> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     const currentTodos = JSON.parse(localStorage.getItem('todos') || '[]') as Todo[]
@@ -107,6 +118,9 @@ export const Todo_api = {
     localStorage.setItem('todos', JSON.stringify(currentTodos))
     return currentTodos[todoIndex]
   },
+  /**
+   * 删除待办事项
+   */
   deleteTodo: async (id: string): Promise<string> => {
     await new Promise(resolve => setTimeout(resolve, 300))
     const currentTodos = JSON.parse(localStorage.getItem('todos') || '[]') as Todo[]
@@ -126,6 +140,9 @@ type TodoStore = {
   deleteTodo: (id: string) => Promise<string>
 }
 
+/**
+ * Todo 状态管理 Store
+ */
 export const useTodoStore = create<TodoStore>((set) => ({
   todos: [],
   loading: false,
@@ -174,14 +191,34 @@ export const useTodoStore = create<TodoStore>((set) => ({
   }
 }))
 
-
 /**
  * 用户表单状态管理 - Hooks Form
  */
 export const mockCountriesOptions =
   ['USA', 'Canada', 'UK', 'Australia', 'Germany', 'France', 'Japan', 'China', 'Brazil', 'India']
-export const mockNationsOptions =
-  ['American', 'Canadian', 'British', 'Australian', 'German', 'French', 'Japanese', 'Chinese', 'Brazilian', 'Indian']
+
+/**
+ * 国家到国籍的映射常量
+ */
+export const COUNTRY_TO_NATION = {
+  USA: 'American',
+  Canada: 'Canadian',
+  UK: 'British',
+  Australia: 'Australian',
+  Germany: 'German',
+  France: 'French',
+  Japan: 'Japanese',
+  China: 'Chinese',
+  Brazil: 'Brazilian',
+  India: 'Indian'
+} as const;
+
+type Country = keyof typeof COUNTRY_TO_NATION;
+type Nation = (typeof COUNTRY_TO_NATION)[Country];
+
+/**
+ * 用户表单基础数据结构
+ */
 export type UserForm = {
   id: string
   name: string
@@ -190,109 +227,178 @@ export type UserForm = {
   birthdate?: string
   avatar?: string
   gender: 'male' | 'female' | 'other'
-  countries: 'USA' | 'Canada' | 'UK' | 'Australia' | 'Germany' | 'France' | 'Japan' | 'China' | 'Brazil' | 'India'
-  nations: 'American' | 'Canadian' | 'British' | 'Australian' | 'German' | 'French' | 'Japanese' | 'Chinese' | 'Brazilian' | 'Indian'
-}
-// 创建 10 条模拟用户数据
-let mockUserData: UserForm[] = [
-  { id: '1', name: 'Alice', email: 'alice@example.com', age: 28, gender: 'female', countries: 'USA', nations: 'American' },
-  { id: '2', name: 'Bob', email: 'bob@example.com', age: 34, gender: 'male', countries: 'Canada', nations: 'Canadian' },
-  { id: '3', name: 'Charlie', email: 'charlie@example.com', age: 22, gender: 'male', countries: 'UK', nations: 'British' },
-  { id: '4', name: 'Diana', email: 'diana@example.com', age: 30, gender: 'female', countries: 'Australia', nations: 'Australian' },
-  { id: '5', name: 'Ethan', email: 'ethan@example.com', age: 26, gender: 'male', countries: 'Germany', nations: 'German' },
-  { id: '6', name: 'Fiona', email: 'fiona@example.com', age: 29, gender: 'female', countries: 'France', nations: 'French' },
-  { id: '7', name: 'George', email: 'george@example.com', age: 31, gender: 'male', countries: 'Japan', nations: 'Japanese' },
-  { id: '8', name: 'Hannah', email: 'hannah@example.com', age: 25, gender: 'female', countries: 'China', nations: 'Chinese' },
-  { id: '9', name: 'Ian', email: 'ian@example.com', age: 27, gender: 'male', countries: 'Brazil', nations: 'Brazilian' },
-  { id: '10', name: 'Julia', email: 'julia@example.com', age: 33, gender: 'female', countries: 'India', nations: 'Indian' },
-]
-
-export const api_UserForm = {
-  getUser: async (): Promise<UserForm[]> => {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    if (!localStorage.getItem('users')) {
-      localStorage.setItem('users', JSON.stringify(mockUserData))
-    }
-    mockUserData = JSON.parse(localStorage.getItem('users') || '[]') as UserForm[]
-    return [...mockUserData]
-  },
-  addUser: async (user: Omit<UserForm, 'id'>): Promise<UserForm> => {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    const newUser = { ...user, id: nanoid() }
-    mockUserData = [...mockUserData, newUser]
-    localStorage.setItem('users', JSON.stringify(mockUserData))
-    return newUser
-  },
-  deleteUser: async (id: string): Promise<void> => {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    mockUserData = mockUserData.filter(u => u.id !== id)
-    localStorage.setItem('users', JSON.stringify(mockUserData))
-  },
-  updateUser: async (user: UserForm): Promise<UserForm> => {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    mockUserData = mockUserData.map(u => u.id === user.id ? user : u)
-    localStorage.setItem('users', JSON.stringify(mockUserData))
-    return user
-  }
+  country: Country
 }
 
+/**
+ * 用户表单计算/派生字段
+ */
+export interface UserFormComputed {
+  nation: Nation
+  isMinor: boolean
+  requiresApproval: boolean
+  backgroundCheckRequired: boolean
+}
+
+/**
+ * 用户表单操作上下文
+ */
+export type UserFormContext = {
+  mode: 'create' | 'edit' | 'view' | 'audit'
+  role: 'admin' | 'guest'
+}
+
+/**
+ * 业务联动计算函数：根据表单基础数据计算派生状态
+ * @param user 部分用户表单数据
+ * @returns 计算后的派生字段对象
+ */
+export const computeUserFields = (user: Partial<UserForm>): UserFormComputed => {
+  const country = user.country || 'USA';
+  const age = user.age || 0;
+  const isMinor = age < 18;
+  const nation = COUNTRY_TO_NATION[country as Country] || 'American';
+  
+  // 业务逻辑联动规则：
+  // 1. 未成年人 (isMinor) 自动标记需要审批 (requiresApproval)
+  // 2. 特定国家 (如 Japan, India) 的用户无论年龄均需要审批
+  const requiresApproval = isMinor || ['Japan', 'India'].includes(country);
+  
+  // 3. 成年人 (!isMinor) 且来自特定国家 (如 USA, UK, Canada) 需要进行背景调查 (backgroundCheckRequired)
+  const backgroundCheckRequired = !isMinor && ['USA', 'UK', 'Canada'].includes(country);
+
+  return {
+    nation,
+    isMinor,
+    requiresApproval,
+    backgroundCheckRequired
+  };
+};
+
+/**
+ * 用户表单 Store 类型定义
+ */
 type UserFormStore = {
   users: UserForm[]
   loading: boolean
   error: string | null
+  context: UserFormContext // 当前操作上下文
   fetchUsers: () => Promise<void>
-  addUser: (user: Omit<UserForm, 'id'>) => Promise<void> //0mit 省略 id 字段
+  addUser: (user: Omit<UserForm, 'id'>) => Promise<void>
   updateUser: (user: UserForm) => Promise<void>
   deleteUser: (id: string) => Promise<void>
+  setContext: (context: Partial<UserFormContext>) => void // 更新上下文
 }
 
-export const useUserFormStore = create<UserFormStore>((set) => ({
-  users: [],
-  loading: false,
-  error: null,
-  fetchUsers: async () => {
-    set({ loading: true, error: null })
-    try {
-      const users = await api_UserForm.getUser()
-      set({ users, loading: false })
-    } catch (err) {
-      set({ error: (err as Error).message, loading: false })
+/**
+ * 用户表单状态管理 Store (对接 MSW Mock 接口)
+ */
+export const useUserFormStore = create<UserFormStore>()(
+  persist(
+    (set) => ({
+      users: [],
+      loading: false,
+      error: null,
+      context: { mode: 'create', role: 'guest' },
+      
+      /**
+       * 异步获取所有用户列表 (从 MSW Mock 接口获取)
+       */
+      fetchUsers: async () => {
+        set({ loading: true, error: null })
+        try {
+          const response = await fetch(withBase('/api/users'))
+          if (!response.ok) throw new Error('Failed to fetch users')
+          const users = await response.json()
+          set({ users, loading: false })
+        } catch (err) {
+          set({ error: (err as Error).message, loading: false })
+        }
+      },
+
+      /**
+       * 新增用户 (调用 MSW POST 接口)
+       * @param user 不含 ID 的用户信息
+       */
+      addUser: async (user: Omit<UserForm, 'id'>) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await fetch(withBase('/api/users'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user)
+          })
+          if (!response.ok) throw new Error('Failed to add user')
+          const newUser = await response.json()
+          set((state) => ({
+            users: [...state.users, newUser],
+            loading: false,
+          }))
+        } catch (err) {
+          set({ error: (err as Error).message, loading: false })
+          throw err
+        }
+      },
+
+      /**
+       * 更新用户信息 (调用 MSW PUT 接口)
+       * @param user 包含 ID 的完整用户信息
+       */
+      updateUser: async (user: UserForm) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await fetch(withBase(`/api/users/${user.id}`), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user)
+          })
+          if (!response.ok) throw new Error('Failed to update user')
+          set((state) => ({
+            users: state.users.map(u => u.id === user.id ? user : u),
+            loading: false
+          }))
+        } catch (err) {
+          set({ error: (err as Error).message, loading: false })
+          throw err
+        }
+      },
+
+      /**
+       * 删除用户 (调用 MSW DELETE 接口)
+       * @param id 用户唯一标识
+       */
+      deleteUser: async (id: string) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await fetch(withBase(`/api/users/${id}`), {
+            method: 'DELETE'
+          })
+          if (!response.ok) throw new Error('Failed to delete user')
+          set((state) => ({
+            users: state.users.filter(u => u.id !== id),
+            loading: false
+          }))
+        } catch (err) {
+          set({ error: (err as Error).message, loading: false })
+          throw err
+        }
+      },
+
+      /**
+       * 更新表单操作上下文 (如角色、模式)
+       * @param newContext 部分上下文信息
+       */
+      setContext: (newContext) => {
+        set((state) => ({
+          context: { ...state.context, ...newContext }
+        }))
+      }
+    }),
+    {
+      name: 'userForm-storage'
     }
-  },
-  addUser: async (user) => {
-    set({ loading: true, error: null })
-    try {
-      const newUser = await api_UserForm.addUser(user)
-      set((state) => ({ users: [...state.users, newUser], loading: false }))
-    } catch (err) {
-      set({ error: (err as Error).message, loading: false })
-    }
-  },
-  updateUser: async (user) => {
-    set({ loading: true, error: null })
-    try {
-      const updatedUser = await api_UserForm.updateUser(user)
-      set((state) => ({
-        users: state.users.map((u) => (u.id === updatedUser.id ? updatedUser : u)),
-        loading: false,
-      }))
-    } catch (err) {
-      set({ error: (err as Error).message, loading: false })
-    }
-  },
-  deleteUser: async (id) => {
-    set({ loading: true, error: null })
-    try {
-      await api_UserForm.deleteUser(id)
-      set((state) => ({
-        users: state.users.filter((u) => u.id !== id),
-        loading: false,
-      }))
-    } catch (err) {
-      set({ error: (err as Error).message, loading: false })
-    }
-  },
-}))
+  )
+)
 
 export interface DailyTask {
   id: string;

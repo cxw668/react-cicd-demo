@@ -1,12 +1,14 @@
-import { mockCountriesOptions, mockNationsOptions, useUserFormStore, type UserForm } from '@/store'
-import { Button, CircularProgress, Typography, Box, Select, TextField, MenuItem, FormControl, InputLabel, Avatar, IconButton, Card, CardContent, CardActions, Tooltip, Snackbar, Alert } from '@mui/material'
+import { mockCountriesOptions, useUserFormStore, type UserForm, COUNTRY_TO_NATION, computeUserFields } from '@/store'
+import { Button, CircularProgress, Typography, Box, Select, TextField, MenuItem, FormControl, InputLabel, Avatar, IconButton, Card, CardContent, CardActions, Tooltip, Snackbar, Alert, Chip, Stack, Divider } from '@mui/material'
 import { StaticDatePicker } from '@mui/x-date-pickers'
-import { PhotoCamera, Delete } from '@mui/icons-material'
-import { useEffect, useState } from 'react'
+import { PhotoCamera, Delete, Security, VerifiedUser, Person, AdminPanelSettings } from '@mui/icons-material'
+import { useEffect, useState, useMemo } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { useShallow } from 'zustand/react/shallow'
 import { consola } from 'consola'
 import dayjs from 'dayjs'
+import { verifyToken } from '@/utils/auth'
+
 export function UserForm4() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
@@ -14,42 +16,66 @@ export function UserForm4() {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  const { users, loading, fetchUsers, addUser, deleteUser } = useUserFormStore(useShallow((state) => ({
+  const { users, loading, fetchUsers, addUser, deleteUser, context, setContext } = useUserFormStore(useShallow((state) => ({
     users: state.users,
     loading: state.loading,
     fetchUsers: state.fetchUsers,
     addUser: state.addUser,
     updateUser: state.updateUser,
     deleteUser: state.deleteUser,
+    context: state.context,
+    setContext: state.setContext
   })))
 
-  let CountriesOptions = []
-  let NationsOptions = []
+  // JWT 角色校验逻辑
+  useEffect(() => {
+    const validateToken = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          const payload = await verifyToken(token);
+          if (payload && payload.role === 'admin') {
+            setContext({ role: 'admin' });
+            consola.success('JWT 验证成功：当前用户为管理员');
+          } else {
+            setContext({ role: 'guest' });
+            consola.info('JWT 验证：当前用户为普通访客');
+          }
+        } else {
+          setContext({ role: 'guest' });
+        }
+      } catch (err) {
+        consola.error('Token 验证过程发生异常:', err);
+        setContext({ role: 'guest' });
+      }
+    };
+    validateToken()
+  }, [setContext]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchUsers()
-      CountriesOptions = mockCountriesOptions;
-      NationsOptions = mockNationsOptions;
-      consola.log(CountriesOptions)
-      consola.info('国家选项数据：', CountriesOptions);
-      consola.info('民族选项数据：', NationsOptions);
+      fetchUsers().catch(err => {
+        setSnackbar({ open: true, message: `加载用户列表失败: ${err.message}`, severity: 'error' });
+      })
     }, 500);
     return () => clearTimeout(timer);
-  }, [fetchUsers, mockCountriesOptions, mockNationsOptions])
+  }, [fetchUsers])
 
-  const { handleSubmit, control, reset } = useForm<UserForm>({
+  const { handleSubmit, control, reset, watch } = useForm<UserForm>({
     defaultValues: {
       name: '',
       email: '',
       age: 20,
       gender: 'male',
-      countries: 'USA',
-      nations: 'American',
+      country: 'USA',
       birthdate: dayjs().format('YYYY-MM-DD')
     },
     mode: "onChange",
   })
+
+  // 监听表单值以进行实时联动计算
+  const formValues = watch();
+  const computed = useMemo(() => computeUserFields(formValues), [formValues]);
 
   const onSubmit = async (data: UserForm) => {
     try {
@@ -63,94 +89,108 @@ export function UserForm4() {
 
   return (
     <Box className="flex gap-10 w-screen" sx={{ p: 3 }}>
-      <Box >
-        <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', marginBottom: '20px' }}>
+      <Box sx={{ flex: 1, maxWidth: '450px' }}>
+        <Card variant="outlined" sx={{ mb: 3, bgcolor: '#f8f9fa' }}>
+          <CardContent sx={{ py: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Current Mode: <Chip component='span' size="small" label={context.mode} color="primary" variant="outlined" />
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Role: <Chip
+                  component='span'
+                  size="small"
+                  icon={context.role === 'admin' ? <AdminPanelSettings /> : <Person />}
+                  label={context.role}
+                  color={context.role === 'admin' ? 'secondary' : 'default'}
+                />
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <Controller
             name="name"
             control={control}
             rules={{ required: 'Name is required' }}
-            render={({ field }) => <TextField required {...field} label="Name" variant="standard" />}
+            render={({ field }) => <TextField required {...field} label="Name" variant="outlined" size="small" />}
           />
           <Controller
             name="email"
             control={control}
             rules={{ required: 'Email is required' }}
-            render={({ field }) => <TextField required {...field} label="Email" variant="standard" />}
+            render={({ field }) => <TextField required {...field} label="Email" variant="outlined" size="small" />}
           />
-          <Controller
-            name="age"
-            control={control}
-            render={({ field }) => <TextField required {...field} label="Age" variant="standard" type="number" />}
-          />
-          <Controller
-            name="countries"
-            control={control}
-            render={({ field }) => (
-              <FormControl fullWidth>
-                <InputLabel id="demo-simple-select-label">Countries</InputLabel>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={field.value}
-                  label="Countries"
-                  onChange={field.onChange}
-                >
-                  <MenuItem value="USA">United States</MenuItem>
-                  <MenuItem value="Canada">Canada</MenuItem>
-                  <MenuItem value="UK">United Kingdom</MenuItem>
-                  <MenuItem value="Australia">Australia</MenuItem>
-                  <MenuItem value="Germany">Germany</MenuItem>
-                  <MenuItem value="France">France</MenuItem>
-                  <MenuItem value="Japan">Japan</MenuItem>
-                  <MenuItem value="China">China</MenuItem>
-                  <MenuItem value="Brazil">Brazil</MenuItem>
-                  <MenuItem value="India">India</MenuItem>
-                </Select>
-              </FormControl>
-            )}
-          />
-          <Controller
-            name="nations"
-            control={control}
-            render={({ field }) => (
-              <FormControl fullWidth>
-                <InputLabel id="demo-simple-select-label">Nations</InputLabel>
-                <Select {...field} native label="Nations">
-                  <option value="American">American</option>
-                  <option value="Canadian">Canadian</option>
-                  <option value="British">British</option>
-                  <option value="Australian">Australian</option>
-                  <option value="German">German</option>
-                  <option value="French">French</option>
-                  <option value="Japanese">Japanese</option>
-                  <option value="Chinese">Chinese</option>
-                  <option value="Brazilian">Brazilian</option>
-                  <option value="Indian">Indian</option>
-                </Select>
-              </FormControl>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Controller
+              name="age"
+              control={control}
+              render={({ field }) => <TextField required {...field} label="Age" variant="outlined" size="small" type="number" sx={{ flex: 1 }} />}
+            />
+            <Controller
+              name="gender"
+              control={control}
+              render={({ field }) => (
+                <FormControl variant="outlined" size="small" sx={{ flex: 1 }}>
+                  <InputLabel>Gender</InputLabel>
+                  <Select {...field} label="Gender">
+                    <MenuItem value="male">Male</MenuItem>
+                    <MenuItem value="female">Female</MenuItem>
+                    <MenuItem value="other">Other</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+            />
+          </Box>
 
-            )}
-          />
-          <Controller
-            name="gender"
-            control={control}
-            render={({ field }) => (
-              <FormControl fullWidth>
-                <InputLabel id="demo-simple-select-label">Gender</InputLabel>
-                <Select {...field} native label="Gender">
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </Select>
-              </FormControl>
-            )}
-          />
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Controller
+              name="country"
+              control={control}
+              render={({ field }) => (
+                <FormControl variant="outlined" size="small" sx={{ flex: 1 }}>
+                  <InputLabel>Country</InputLabel>
+                  <Select {...field} label="Country">
+                    {mockCountriesOptions.map((country) => (
+                      <MenuItem key={country} value={country}>{country}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+            />
+            <TextField value={computed.nation} disabled label="Nation (Derived)" variant="outlined" size="small" sx={{ flex: 1, bgcolor: '#f0f0f0' }} />
+          </Box>
+
+          {/* 业务联动状态显示区 */}
+          <Card variant="outlined" sx={{ borderColor: 'divider', bgcolor: 'rgba(0,0,0,0.02)' }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+                Business Logic Checks:
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {computed.isMinor && (
+                  <Chip size="small" label="Minor User" color="warning" variant="filled" />
+                )}
+                <Chip
+                  size="small"
+                  icon={computed.requiresApproval ? <Security fontSize="small" /> : <VerifiedUser fontSize="small" />}
+                  label={computed.requiresApproval ? "Needs Approval" : "Auto Approved"}
+                  color={computed.requiresApproval ? "error" : "success"}
+                />
+                {computed.backgroundCheckRequired && (
+                  <Chip size="small" label="Background Check Required" color="info" variant="outlined" />
+                )}
+              </Stack>
+            </CardContent>
+          </Card>
+
           <Controller
             name="birthdate"
             control={control}
             render={({ field }) => (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
-                <Typography sx={{ fontWeight: 'bold' }}>Birthdate:</Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 'fold' }}>Birthdate:</Typography>
                 <StaticDatePicker
                   {...field}
                   value={field.value ? dayjs(field.value) : null}
@@ -171,48 +211,23 @@ export function UserForm4() {
             control={control}
             render={({ field: { onChange, value } }) => (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography sx={{ fontWeight: 'bold' }}>Avatar:</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Avatar:</Typography>
                 <Box sx={{ position: 'relative' }}>
-                  <IconButton color="primary" aria-label="upload picture" component="label" sx={{ p: 0 }}>
-                    <input
-                      hidden
-                      accept="image/*"
-                      type="file"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            onChange(reader.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                    <Avatar
-                      src={value}
-                      sx={{ width: 64, height: 64, cursor: 'pointer', border: '1px solid #ddd' }}
-                    >
+                  <IconButton color="primary" component="label" sx={{ p: 0 }}>
+                    <input hidden accept="image/*" type="file" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => onChange(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }} />
+                    <Avatar src={value} sx={{ width: 64, height: 64, border: '1px solid #ddd' }}>
                       {!value && <PhotoCamera />}
                     </Avatar>
                   </IconButton>
                   {value && (
-                    <IconButton
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onChange('');
-                      }}
-                      sx={{
-                        position: 'absolute',
-                        top: -10,
-                        right: -10,
-                        bgcolor: 'background.paper',
-                        boxShadow: 2,
-                        '&:hover': { bgcolor: '#ff1744', color: 'white' },
-                        zIndex: 1
-                      }}
-                    >
+                    <IconButton onClick={() => onChange('')} sx={{ position: 'absolute', top: -10, right: -10, bgcolor: 'background.paper', boxShadow: 2, '&:hover': { bgcolor: '#ff1744', color: 'white' } }}>
                       <Delete fontSize="small" />
                     </IconButton>
                   )}
@@ -220,34 +235,35 @@ export function UserForm4() {
               </Box>
             )}
           />
-          <Button variant="contained" type="submit" disabled={loading}>
-            {loading ? <CircularProgress size={24} /> : 'Add User'}
+
+          <Button variant="contained" type="submit" disabled={loading} size="large" sx={{ mt: 2 }}>
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Create User'}
           </Button>
         </form>
       </Box>
-      <Box>
+
+      <Divider orientation="vertical" flexItem />
+
+      <Box sx={{ flex: 1 }}>
+        <Typography variant="h6" gutterBottom>User List ({users.length})</Typography>
         {loading && users.length === 0 ? (
           <CircularProgress />
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: '500px', overflowY: 'auto', p: 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: '80vh', overflowY: 'auto', pr: 1 }}>
             {users.map((user) => (
-              <Card key={user.id} variant="outlined" sx={{ display: 'flex', alignItems: 'center', p: 1, overflow: 'visible' }} className='h-20'>
-                <Avatar src={user.avatar} sx={{ width: 56, height: 56, mr: 2 }}>
+              <Card key={user.id} variant="outlined" sx={{ display: 'flex', alignItems: 'center', p: 1, position: 'relative' }}>
+                <Avatar src={user.avatar} sx={{ width: 50, height: 50, mr: 2 }}>
                   {!user.avatar && user.name.charAt(0)}
                 </Avatar>
-                <CardContent sx={{ flex: '1 0 auto', p: '8px !important' }}>
-                  <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'bold' }}>
-                    {user.name}
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>{user.name}</Typography>
+                  <Typography variant="caption" color="text.secondary" display="block">{user.email}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {user.age} yrs | {user.country} | {COUNTRY_TO_NATION[user.country as keyof typeof COUNTRY_TO_NATION]}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {user.email}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    Age: {user.age} | {user.countries}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Tooltip title="删除用户" arrow>
+                </Box>
+                <CardActions sx={{ position: 'absolute', right: 0 }}>
+                  <Tooltip title="Delete User">
                     <IconButton color="error" onClick={() => deleteUser(user.id)} size="small">
                       <Delete fontSize="small" />
                     </IconButton>
@@ -258,15 +274,9 @@ export function UserForm4() {
           </Box>
         )}
       </Box>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
+
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={handleSnackbarClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>{snackbar.message}</Alert>
       </Snackbar>
     </Box>
   )

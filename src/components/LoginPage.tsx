@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Box, TextField, Button, Typography, Paper, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { signToken } from "../utils/auth";
 import { useUserStore } from "../store";
-import { ConnectToBase } from "@/utils/database";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,16 +11,13 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
 
-  useEffect(()=>{
-    ConnectToBase()
-  })
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     // Mock login logic
     if (email === "admin@123.com" && password === "123456") {
-      const user = { name: "Admin User", email };
+      const user = { name: "Admin User", email, role: "admin" };
       const token = await signToken(user);
       
       // Store token in localStorage
