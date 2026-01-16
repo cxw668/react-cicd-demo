@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserStore } from "../store";
 import { cookieStore } from "../utils/cookie";
 import { getOAuthRedirectUrl } from "../utils/oauth";
-import axios from "axios";
+import { trpc } from "../utils/trpc";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,25 +13,22 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const setUser = useUserStore((state) => state.setUser);
 
+  const loginMutation = trpc.localLogin.useMutation({
+    onSuccess: (data) => {
+      // 使用统一的 cookieStore 管理 token
+      cookieStore.set("auth_token", data.token, 7);
+      setUser(data.user);
+      navigate("/");
+    },
+    onError: (err) => {
+      setError(err.message || "Invalid email or password.");
+    }
+  });
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    try {
-      const response = await axios.post("http://localhost:3001/api/login", {
-        email,
-        password,
-      });
-
-      const { token, user } = response.data;
-
-      // 使用统一的 cookieStore 管理 token
-      cookieStore.set("auth_token", token, 7);
-      setUser(user);
-      navigate("/");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid email or password.");
-    }
+    loginMutation.mutate({ email, password });
   };
   /**
    * GITHUB login verify

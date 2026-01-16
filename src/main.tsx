@@ -1,4 +1,3 @@
-// import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './utils/i18'
@@ -6,9 +5,13 @@ import { RouterProvider } from 'react-router-dom'
 import router from './router'
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { worker } from './mocks/browser'
-import { withBase } from './utils/path'
+// import { worker } from './mocks/browser'
+// import { withBase } from './utils/path'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { trpc } from './utils/trpc'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { httpBatchLink } from '@trpc/client'
+import { useState } from 'react'
 
 // if (import.meta.env.DEV) {
 //   worker.start({
@@ -30,10 +33,33 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 //   });
 // }
 
+function Root() {
+  const [queryClient] = useState(() => new QueryClient())
+  const [trpcClient] = useState(() =>
+    trpc.createClient({
+      links: [
+        httpBatchLink({
+          url: import.meta.env.DEV 
+            ? 'http://localhost:3001/trpc' 
+            : 'https://cxw668.github.io/react-cicd-demo/trpc',
+        }),
+      ],
+    })
+  )
+
+  return (
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <RouterProvider router={router} />
+        </LocalizationProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
+  )
+}
+
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary>
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <RouterProvider router={router} />
-    </LocalizationProvider>
+    <Root />
   </ErrorBoundary>
 )

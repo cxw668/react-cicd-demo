@@ -4,7 +4,7 @@ import { Box, CircularProgress, Typography, Paper } from '@mui/material';
 import { useUserStore } from '../store';
 import { cookieStore } from '../utils/cookie';
 import { consola } from 'consola';
-import axios from 'axios';
+import { trpc } from '../utils/trpc';
 
 export default function OAuthCallback() {
   const [searchParams] = useSearchParams();
@@ -12,57 +12,48 @@ export default function OAuthCallback() {
   const setUser = useUserStore((state) => state.setUser);
   const [status, setStatus] = useState('Verifying authorization...');
 
+  const oauthMutation = trpc.oauthLogin.useMutation({
+    onSuccess: (data) => {
+      // 3. 存储 Token 并更新用户状态
+      cookieStore.set('auth_token', data.token, 7);
+      setUser(data.user);
+
+      // 4. 清理状态并跳转
+      localStorage.removeItem('oauth_state');
+      localStorage.removeItem('oauth_provider');
+      
+      setStatus('Login successful! Redirecting...');
+      setTimeout(() => navigate('/'), 1000);
+    },
+    onError: (error) => {
+      consola.error('OAuth login error:', error);
+      setStatus(`Error: ${error.message}`);
+      setTimeout(() => navigate('/login'), 3000);
+    }
+  });
+
   useEffect(() => {
-    const handleCallback = async () => {
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-      const storedState = localStorage.getItem('oauth_state');
-      const provider = localStorage.getItem('oauth_provider');
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const storedState = localStorage.getItem('oauth_state');
+    const provider = localStorage.getItem('oauth_provider') as 'github' | 'gitlab';
 
-      // 1. 基础验证
-      if (!code || state !== storedState) {
-        consola.error('OAuth verification failed: Invalid state or code');
-        setStatus('Authorization failed. Redirecting to login...');
-        setTimeout(() => navigate('/login'), 2000);
-        return;
-      }
+    // 1. 基础验证
+    if (!code || state !== storedState || !provider) {
+      consola.error('OAuth verification failed: Invalid state or code');
+      setStatus('Authorization failed. Redirecting to login...');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
 
-      try {
-        setStatus(`Exchanging code with ${provider}...`);
-        
-        // 2. 调用后端接口换取 Token
-        // 后端地址默认为 http://localhost:3001
-        const response = await axios.post('/api/oauth/callback', {
-          code,
-          provider
-        });
-
-        const { token, user } = response.data;
-
-        if (token && user) {
-          // 3. 存储 Token 并更新用户状态
-          cookieStore.set('auth_token', token, 7);
-          setUser(user);
-
-          // 4. 清理状态并跳转
-          localStorage.removeItem('oauth_state');
-          localStorage.removeItem('oauth_provider');
-          
-          setStatus('Login successful! Redirecting...');
-          setTimeout(() => navigate('/'), 1000);
-        } else {
-          throw new Error('Invalid response from server');
-        }
-      } catch (error: any) {
-        consola.error('OAuth login error:', error);
-        const errorMsg = error.response?.data?.message || error.message || 'An error occurred during login.';
-        setStatus(`Error: ${errorMsg}`);
-        setTimeout(() => navigate('/login'), 3000);
-      }
-    };
-
-    handleCallback();
-  }, [searchParams, navigate, setUser]);
+    setStatus(`Exchanging code with ${provider}...`);
+    
+    // 2. 调用后端 tRPC 接口换取 Token
+    oauthMutation.mutate({
+      code,
+      provider
+    });
+  }, []);
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
