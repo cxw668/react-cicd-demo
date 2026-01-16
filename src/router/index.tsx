@@ -2,7 +2,7 @@ import React from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import App from '../App'
 import LoginPage from '../components/LoginPage'
-import OauthCallback from '@/components/OAuthCallback'
+import OauthCallback from '@/components/OauthCallback'
 
 // 懒加载组件
 const DashBoard = React.lazy(() => import('../components/DashBoard'))

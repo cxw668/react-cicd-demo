@@ -32,7 +32,7 @@ export default function OAuthCallback() {
         
         // 2. 调用后端接口换取 Token
         // 后端地址默认为 http://localhost:3001
-        const response = await axios.post('http://localhost:3001/api/oauth/callback', {
+        const response = await axios.post('/api/oauth/callback', {
           code,
           provider
         });

@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { createConnection } from 'mysql2/promise';
 import consola from 'consola';
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT } from 'jose';
 import axios from 'axios';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -19,7 +19,7 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key-at-least-32-characters');
+const JWT_SECRET = new TextEncoder().encode(process.env.VITE_JWT_SECRET || 'your-secret-key-at-least-32-characters-long-123456');
 
 /**
  * 数据库连接函数
@@ -32,11 +32,11 @@ async function getDbConnection() {
   }
   try {
     const connection = await createConnection(databaseUrl);
-    
+
     const DB_NAME = 'react_cicd_demo';
     await connection.query(`CREATE DATABASE IF NOT EXISTS ${DB_NAME}`);
     await connection.query(`USE ${DB_NAME}`);
-    
+
     return connection;
   } catch (err) {
     consola.error('❌ 数据库连接失败:', err.message);
@@ -60,7 +60,7 @@ async function generateToken(payload) {
  */
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  
+
   const connection = await getDbConnection();
   if (!connection) {
     return res.status(500).json({ success: false, message: '数据库连接失败' });
@@ -71,17 +71,17 @@ app.post('/api/login', async (req, res) => {
       'SELECT * FROM users WHERE email = ? AND password = ?',
       [email, password]
     );
-    
+
     const user = rows[0];
-    
+
     if (user) {
-      const token = await generateToken({ 
-        id: user.id, 
-        email: user.email, 
-        name: user.name, 
-        role: user.role 
+      const token = await generateToken({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
       });
-      
+
       consola.success(`👤 用户登录成功: ${email}`);
       res.json({ success: true, token, user: { name: user.name, email: user.email, role: user.role } });
     } else {
@@ -108,7 +108,7 @@ app.post('/api/oauth/callback', async (req, res) => {
 
   try {
     let userData = {};
-    
+
     if (provider === 'github') {
       // 1. 换取 GitHub Access Token
       const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
@@ -120,29 +120,67 @@ app.post('/api/oauth/callback', async (req, res) => {
       });
 
       const accessToken = tokenResponse.data.access_token;
-      if (!accessToken) throw new Error('GitHub 授权失败');
+      if (!accessToken) {
+        throw new Error(`GitHub 授权失败: ${tokenResponse.data.error_description || tokenResponse.data.error || 'Unknown error'}`);
+      }
 
       // 2. 获取 GitHub 用户信息
       const userResponse = await axios.get('https://api.github.com/user', {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-      
+
+      // GitHub 可能不返回公开邮箱，需要单独获取
+      let email = userResponse.data.email;
+      if (!email) {
+        try {
+          const emailsResponse = await axios.get('https://api.github.com/user/emails', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          });
+          const primaryEmail = emailsResponse.data.find(e => e.primary && e.verified);
+          email = primaryEmail ? primaryEmail.email : `${userResponse.data.login}@github.com`;
+        } catch (e) {
+          email = `${userResponse.data.login}@github.com`;
+        }
+      }
+
       userData = {
         name: userResponse.data.name || userResponse.data.login,
-        email: userResponse.data.email,
-        role: 'admin', // 默认分配 admin 角色
+        email: email,
+        role: 'admin',
         avatar: userResponse.data.avatar_url
       };
     } else if (provider === 'gitlab') {
-      const token = await axios.post('https://gitlab.example.com/oauth/authorize', {
-        
-      })
-      // GitLab 授权码交换逻辑 (占位，实际可参考 GitHub 实现)
-      userData = { 
-        name: 'GitLab User', 
-        email: 'gitlab@demo.com', 
-        role: 'user', 
-        avatar: 'https://gitlab.com/gitlab.png' 
+      // 1. 换取 GitLab Access Token
+      const origin = req.headers.origin || 'http://localhost:5173';
+      const redirectUri = origin + '/react-cicd-demo/oauth/callback';
+      
+      consola.info(`🔄 GitLab 回调使用 Redirect URI: ${redirectUri}`);
+
+      const tokenResponse = await axios.post('https://gitlab.com/oauth/token', {
+        client_id: process.env.GITLAB_CLIENT_ID,
+        client_secret: process.env.GITLAB_CLIENT_SECRET,
+        code: code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri
+      }, {
+        headers: { Accept: 'application/json' }
+      });
+
+      const accessToken = tokenResponse.data.access_token;
+      if (!accessToken) {
+        throw new Error(`GitLab 授权失败: ${tokenResponse.data.error_description || tokenResponse.data.error || 'Unknown error'}`);
+      }
+
+      // 2. 获取 GitLab 用户信息
+      const userResponse = await axios.get('https://gitlab.com/api/v4/user', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+
+      userData = {
+        name: userResponse.data.name || userResponse.data.username,
+        email: userResponse.data.email,
+        role: 'admin',
+        avatar: userResponse.data.avatar_url
       };
     }
 
@@ -170,84 +208,20 @@ app.post('/api/oauth/callback', async (req, res) => {
 
     // 4. 生成应用内 JWT
     const token = await generateToken(userData);
-    
+
     consola.success(`🔗 三方登录成功: ${userData.name} (${provider})`);
     res.json({ success: true, token, user: userData });
   } catch (err) {
-    consola.error(`❌ OAuth 交换失败:`, err.message);
-    res.status(500).json({ message: '三方登录失败', error: err.message });
+    consola.error(`❌ OAuth 交换失败:`, err.response?.data || err.message);
+    res.status(500).json({ 
+      message: '三方登录失败', 
+      error: err.message,
+      details: err.response?.data 
+    });
   }
 });
 
-/**
- * 身份验证中间件
- */
-async function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ message: '未提供认证令牌' });
-  }
 
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    req.user = payload;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: '令牌无效或已过期' });
-  }
-}
-
-/**
- * 初始化数据库表结构
- */
-async function initDatabase(connection) {
-  if (!connection) return;
-  
-  try {
-    // 1. 创建用户表
-    const createUsersTable = `
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255),
-        role VARCHAR(50) DEFAULT 'user',
-        avatar VARCHAR(500),
-        provider VARCHAR(50) DEFAULT 'local',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `;
-
-    await connection.query(createUsersTable);
-    consola.success('📊 数据库：用户表 (users) 初始化成功/已存在');
-
-    // 2. 检查是否需要插入初始管理员
-    const [rows] = await connection.query('SELECT COUNT(*) as count FROM users');
-    if (rows[0].count === 0) {
-      const insertAdmin = `
-        INSERT INTO users (name, email, password, role, provider) 
-        VALUES (?, ?, ?, ?, ?)
-      `;
-      await connection.query(insertAdmin, ['Admin User', 'admin@123.com', '123456', 'admin', 'local']);
-      consola.success('👤 数据库：已创建初始管理员账号');
-    }
-  } catch (err) {
-    consola.error('❌ 数据库：表初始化失败:', err.message);
-  }
-}
-
-async function Main() {
-  const connection = await getDbConnection();
-  if (connection) {
-    await initDatabase(connection);
-    // 使用完后关闭连接（生产环境建议使用连接池）
-    await connection.end();
-  }
-  consola.success('🚀 后端系统已准备就绪');
-}
-
-// 启动后端服务
 app.listen(PORT, () => {
   consola.success(`✅ 后端服务运行在: http://localhost:${PORT}`);
 });

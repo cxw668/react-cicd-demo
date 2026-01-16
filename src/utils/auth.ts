@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 
 const SECRET = new TextEncoder().encode(
-  'your-secret-key-at-least-32-characters'
+  import.meta.env.VITE_JWT_SECRET || 'your-secret-key-at-least-32-characters-long-123456'
 );
 
 export async function signToken(payload: any) {

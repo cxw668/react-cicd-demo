@@ -10,7 +10,7 @@ export const OAUTH_CONFIG = {
     scope: 'read:user user:email',
   },
   gitlab: {
-    clientId: 'c618894549f6abf8ccf6bfca45e61138ec09db9f6a05387c1c2b334e35f7b4a9',
+    clientId: 'f25779eaf8e8d6fd955407efebf0d33e04eb90dd61b8e3374b5fc01e0789d709',
     authUrl: 'https://gitlab.com/oauth/authorize',
     scope: 'read_user',
   }
