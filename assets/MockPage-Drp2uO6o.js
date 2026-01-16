@@ -1,1 +1,0 @@
-import{r as t,aN as a,j as n}from"./index-DoFWMrzN.js";function u(){const[s,r]=t.useState(null);return t.useEffect(()=>{fetch(a("/api/user")).then(e=>e.json()).then(e=>r(e))},[]),n.jsxs("div",{children:["Hello ",s&&s?.name]})}export{u as default};
